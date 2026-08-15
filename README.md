@@ -17,6 +17,28 @@ KYC Verify lets applicants create a secure account, complete a KYC application, 
 
 > **Seeded staff accounts** (password for all: `Password123`): `ceo@kyc.local`, `superadmin@kyc.local`, `admin@kyc.local`
 
+## How staff (CEO / Admin / Super Admin) get accounts
+
+Staff members **cannot sign up through the public registration page** — that form always creates an `APPLICANT` account (`role` defaults to `APPLICANT` in the database). Staff accounts are created in two ways:
+
+1. **Seeded accounts** — `install.sql` inserts one account per staff role when you import it. Sign in with the credentials above.
+2. **Super Admin creates them** — the **Super Admin** is the gatekeeper. After signing in as `superadmin@kyc.local`, open **Users** (`?page=users`) and:
+   - **Create a user** and choose the role: `APPLICANT`, `ADMIN`, `SUPER_ADMIN`, or `CEO`
+   - **Change an existing user's role** — for example, promote an applicant to Admin
+   - **Reset a user's password**
+
+All user-management actions are protected by `require_role(['SUPER_ADMIN'])`, so a random person can never register themselves as CEO, Admin, or Super Admin.
+
+### Sign-in flow for staff
+
+```text
+Sign in → ?page=login → role-based dashboard
+   CEO          → company analytics (KPIs, pipeline, email activity)
+   SUPER_ADMIN  → review queue + user management
+   ADMIN        → review queue + all applications
+   APPLICANT    → personal KYC dashboard
+```
+
 ## Highlights
 
 - Native PHP application — no Node.js, Django, Supabase, or external cloud service required
