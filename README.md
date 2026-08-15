@@ -39,6 +39,27 @@ Sign in → ?page=login → role-based dashboard
    APPLICANT    → personal KYC dashboard
 ```
 
+## Default staff logins & creating users
+
+The database comes with three staff accounts pre-seeded by `install.sql`. Use these to log in and explore each dashboard immediately:
+
+| Role            | Email                  | Password      |
+| --------------- | ---------------------- | ------------- |
+| **CEO**         | `ceo@kyc.local`        | `Password123` |
+| **SUPER_ADMIN** | `superadmin@kyc.local` | `Password123` |
+| **ADMIN**       | `admin@kyc.local`      | `Password123` |
+
+> On the login page you'll also see a **Demo accounts** panel with one-click sign-in buttons for each of these three staff roles — handy for testing.
+
+The public **Create an account** page always registers an `APPLICANT`, so employees and staff are created by the Super Admin instead:
+
+1. Sign in as **Super Admin** (`superadmin@kyc.local` / `Password123`).
+2. Open **Users** from the navigation (`?page=users`).
+3. Use the **Create user** form — enter a username, email, password (at least 8 characters), and choose the role: `APPLICANT`, `ADMIN`, `SUPER_ADMIN`, or `CEO`.
+4. Click **Create user**. The new employee can now sign in with the email and password you set.
+
+You can also **change a user's role** or **reset a user's password** from the **Manage** menu next to each user in the list.
+
 ## Highlights
 
 - Native PHP application — no Node.js, Django, Supabase, or external cloud service required

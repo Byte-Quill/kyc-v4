@@ -432,6 +432,21 @@ tbody tr:hover td { background: #fafcfc; }
 .callout-text { margin: 8px 0 0; }
 .callout .button { margin-left: auto; }
 
+/* Demo-account quick sign-in on the login page */
+.demo-logins {
+    display: block;
+    width: 100%;
+}
+.demo-logins h3 { margin: 0; font-size: 15px; }
+.demo-logins .callout-text { margin: 4px 0 12px; font-size: 14px; }
+.demo-logins-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.demo-logins-grid form { margin: 0; }
+.demo-logins-grid .button { margin: 0; }
+
 /* ------------------------------------------------------------------
    Details / timeline
    ------------------------------------------------------------------ */

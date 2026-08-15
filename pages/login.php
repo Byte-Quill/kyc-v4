@@ -27,6 +27,29 @@ header_html('Sign in');
         <button class="button button-block">Sign in</button>
         <p class="muted">New here? <a href="?page=register">Create an account</a></p>
     </form>
+
+    <div class="callout callout-info demo-logins">
+        <h3>Demo accounts</h3>
+        <p class="callout-text">One-click sign-in for the seeded staff roles (password: <code>Password123</code>):</p>
+        <div class="demo-logins-grid">
+            <?php
+            $demo = [
+                'CEO'         => 'ceo@kyc.local',
+                'Super Admin' => 'superadmin@kyc.local',
+                'Admin'       => 'admin@kyc.local',
+            ];
+            foreach ($demo as $label => $email):
+            ?>
+                <form method="post">
+                    <input type="hidden" name="csrf" value="<?= csrf() ?>">
+                    <input type="hidden" name="action" value="login">
+                    <input type="hidden" name="email" value="<?= e($email) ?>">
+                    <input type="hidden" name="password" value="Password123">
+                    <button class="button button-small"><?= e($label) ?></button>
+                </form>
+            <?php endforeach; ?>
+        </div>
+    </div>
 </section>
 <?php
 footer_html();
