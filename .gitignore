@@ -1,0 +1,20 @@
+# Environment & secrets - never commit real credentials
+.env
+.env.*
+!.env.example
+
+# Dependencies (install via `composer install`)
+/vendor/
+
+# Uploaded documents (keep the folder, ignore contents)
+/uploads/*
+!/uploads/.gitkeep
+
+# Logs & caches
+*.log
+.DS_Store
+
+# IDE / OS
+.idea/
+.vscode/
+Thumbs.db

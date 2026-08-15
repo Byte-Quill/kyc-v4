@@ -56,58 +56,119 @@ KYC Verify lets applicants create a secure account, complete a KYC application, 
    C:\xampp\htdocs\kyc-v4
    ```
 
-2. Install PHP dependencies (PHPMailer). With [Composer](https://getcomposer.org) installed:
+2. Create your local environment file from the template:
+
+   ```text
+   cp .env.example .env
+   ```
+
+   On Windows (Git Bash / PowerShell):
+
+   ```text
+   copy .env.example .env
+   ```
+
+   The `.env` file holds your database and SMTP settings. It is **ignored by git**, so your credentials never get committed. If you skip this step the built-in defaults are used.
+
+3. Install PHP dependencies (PHPMailer). With [Composer](https://getcomposer.org) installed:
 
    ```text
    cd C:\xampp\htdocs\kyc-v4
    composer install
    ```
 
-3. Open the XAMPP Control Panel and start **Apache** and **MySQL**.
+4. Open the XAMPP Control Panel and start **Apache** and **MySQL**.
 
-4. Open phpMyAdmin at [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+5. Open phpMyAdmin at [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
 
-5. Select **Import**, choose [install.sql](install.sql), then click **Import**. This creates the `kyc_system` database, all tables, and the seeded staff accounts.
+6. Select **Import**, choose [install.sql](install.sql), then click **Import**. This creates the `kyc_system` database, all tables, and the seeded staff accounts.
 
-6. Open the application:
+7. Open the application:
 
    ```text
    http://localhost/kyc-v4/
    ```
 
-7. Register an applicant account, create an application, and submit it — the review team will be notified by email.
+8. Register an applicant account, create an application, and submit it — the review team will be notified by email.
 
 > **Important:** If you imported an older version of this project schema, first remove the old `kyc_system` database in phpMyAdmin, then import the revised [install.sql](install.sql). This prevents old tables or columns from conflicting with the normalized design.
+
+## Configuration with `.env`
+
+All settings live in `.env` (copy it from `.env.example`). [config.php](config.php) loads the file at startup with a lightweight built-in parser — no extra package needed — and falls back to sensible defaults when a variable is missing or the file does not exist.
+
+| Variable           | Default                   | Description                                 |
+| ------------------ | ------------------------- | ------------------------------------------- |
+| `APP_NAME`         | `KYC Verify`              | Application name shown in the UI and emails |
+| `APP_URL`          | `http://localhost/kyc-v4` | Base URL used in email links                |
+| `UPLOAD_DIR`       | `uploads`                 | Folder where uploaded documents are stored  |
+| `MAX_UPLOAD_BYTES` | `5242880`                 | Maximum upload size in bytes (5 MB)         |
+| `DB_HOST`          | `127.0.0.1`               | MySQL host                                  |
+| `DB_NAME`          | `kyc_system`              | MySQL database name                         |
+| `DB_USER`          | `root`                    | MySQL username                              |
+| `DB_PASS`          | _(empty)_                 | MySQL password                              |
+| `MAIL_ENABLED`     | `false`                   | Set `true` to send real email via SMTP      |
+| `SMTP_HOST`        | `smtp.gmail.com`          | SMTP server                                 |
+| `SMTP_PORT`        | `587`                     | SMTP port                                   |
+| `SMTP_USER`        | `your-email@gmail.com`    | SMTP username                               |
+| `SMTP_PASS`        | `your-app-password`       | SMTP password / app password                |
+| `SMTP_ENCRYPTION`  | `tls`                     | `tls` or `ssl`                              |
+| `MAIL_FROM`        | `no-reply@kyc.local`      | From address for outgoing mail              |
+| `MAIL_FROM_NAME`   | `KYC Verify`              | From name for outgoing mail                 |
+| `APP_TIMEZONE`     | `Asia/Kathmandu`          | Application timezone                        |
+
+Example `.env`:
+
+```dotenv
+APP_NAME="KYC Verify"
+APP_URL="http://localhost/kyc-v4"
+
+DB_HOST="127.0.0.1"
+DB_NAME="kyc_system"
+DB_USER="root"
+DB_PASS=""
+
+MAIL_ENABLED="true"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+SMTP_ENCRYPTION="tls"
+MAIL_FROM="no-reply@kyc.local"
+MAIL_FROM_NAME="KYC Verify"
+```
+
+> `MAIL_ENABLED`, `SMTP_PORT`, and `MAX_UPLOAD_BYTES` are parsed as real boolean / integer values, so use `true`/`false` and plain numbers there.
 
 ## Email / SMTP configuration
 
 Email is **disabled by default** (`MAIL_ENABLED = false`). Every message is still recorded in the `email_logs` table, so you can verify notifications without a mail server.
 
-To send real email, edit [config.php](config.php):
+To send real email, set these values in `.env`:
 
-```php
-define('MAIL_ENABLED', true);
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', 'your-email@gmail.com');
-define('SMTP_PASS', 'your-app-password'); // Google App Password, not your normal password
-define('SMTP_ENCRYPTION', 'tls');
-define('MAIL_FROM', 'no-reply@kyc.local');
-define('MAIL_FROM_NAME', 'KYC Verify');
-define('APP_URL', 'http://localhost/kyc-v4'); // base URL used in email links
+```dotenv
+MAIL_ENABLED="true"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"   # Google App Password, not your normal password
+SMTP_ENCRYPTION="tls"
+MAIL_FROM="no-reply@kyc.local"
+MAIL_FROM_NAME="KYC Verify"
+APP_URL="http://localhost/kyc-v4"   # base URL used in email links
 ```
 
 For Gmail you must enable **2-Step Verification** and create an **App Password**. For other providers adjust `SMTP_HOST`, `SMTP_PORT`, and `SMTP_ENCRYPTION` accordingly.
 
 ## Database configuration
 
-The default XAMPP MySQL credentials are already set in [config.php](config.php):
+The default XAMPP MySQL credentials are set in `.env`:
 
-```php
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'kyc_system');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+```dotenv
+DB_HOST="127.0.0.1"
+DB_NAME="kyc_system"
+DB_USER="root"
+DB_PASS=""
 ```
 
 Update these values only if your MySQL username, password, or database name is different.
@@ -149,14 +210,17 @@ DRAFT → SUBMITTED → UNDER REVIEW → APPROVED
 
 ```text
 index.php          Front controller — sessions, CSRF, routing
-config.php         Database, SMTP, and app settings
+config.php         Loads .env and defines all app settings
+.env.example       Template for your local .env (copy to .env)
+.env               Your local secrets (ignored by git, not committed)
 database.php       PDO connection
 functions.php      Core helpers (output, uploads, queries, badges)
 auth.php           Login / role helpers
 mailer.php         Email sending via PHPMailer + email_logs
 actions.php        All POST handlers (auth, applications, review, users)
 layout.php         Shared header / footer / navigation
-pages/             One file per page (login, dashboard, review, users, …)
+pages/             One file per page (login, dashboard, review, users, ...)
 assets/style.css   Design system and responsive layout
 install.sql        Schema + seeded staff accounts
+.gitignore         Excludes .env, uploads, and vendor from git
 ```
