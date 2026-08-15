@@ -100,6 +100,7 @@ $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
                     ? 'Review applications and manage every user account and role on the platform.'
                     : 'Review applications awaiting a decision and keep the queue moving.') ?>
         </p>
+        <p class="muted">Signed in as <strong><?= e($u['username']) ?></strong> · <?= e($u['email']) ?></p>
     </div>
     <?php if ($pendingApps > 0): ?>
         <a class="button button-primary" href="?page=review">Review queue (<?= $pendingApps ?>)</a>
