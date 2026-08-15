@@ -4,31 +4,49 @@
 
 ![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white) ![XAMPP](https://img.shields.io/badge/Run%20with-XAMPP-FB7A24) ![License](https://img.shields.io/badge/Local%20project-ready-success)
 
-KYC Verify lets applicants create a secure account, complete a KYC application, provide their addresses, and upload academic and government documents. Reviewers and administrators can then review applications and record a final decision.
+KYC Verify lets applicants create a secure account, complete a KYC application, provide their addresses, and upload academic and government documents. A three-tier review team — **CEO**, **Super Admin**, and **Admin** — reviews every submission, each with its own dashboard. The system emails all staff the moment an application is submitted and emails the applicant on every review decision.
+
+## Roles
+
+| Role            | Dashboard                            | Capabilities                                                         |
+| --------------- | ------------------------------------ | -------------------------------------------------------------------- |
+| **APPLICANT**   | Personal stats & recent applications | Create, complete, submit and resubmit applications; upload documents |
+| **ADMIN**       | Review queue & all applications      | Review, approve, reject, request resubmission                        |
+| **SUPER_ADMIN** | Review queue + user management       | Everything Admin can do, plus create users and change roles          |
+| **CEO**         | Company analytics                    | KPIs, approval rate, pipeline breakdown, email activity              |
+
+> **Seeded staff accounts** (password for all: `Password123`): `ceo@kyc.local`, `superadmin@kyc.local`, `admin@kyc.local`
 
 ## Highlights
 
 - Native PHP application — no Node.js, Django, Supabase, or external cloud service required
 - MySQL database designed for XAMPP/phpMyAdmin
 - Secure registration and sign-in using PHP password hashing and protected sessions
+- Role-based dashboards: distinct views for applicants, admins, super admins, and the CEO
+- **Email notifications via SMTP (PHPMailer)**:
+  - On submission → CEO, Super Admin, and Admin are all notified at once
+  - On resubmission request / rejection / approval → the applicant is emailed with review notes
+  - Every email is logged in `email_logs`, so the flow can be verified even without a mail server
 - Permanent and temporary address details
 - Education-document uploads: **SEE**, **SLC**, and **Graduate** certificates
 - Government-document uploads: **Citizenship**, **Passport**, and **License**
 - JPG, PNG, and PDF validation with a 5 MB upload limit
 - Draft, submit, approve, reject, and resubmission application workflow
-- Reviewer/admin review queue and a complete audit trail
+- Complete audit trail of every application event
+- Clean, responsive multi-file codebase (pages/actions split, zero legacy)
 
 ## Technology
 
-| Layer | Used technology |
-| --- | --- |
-| Web server | Apache, included with XAMPP |
-| Backend | PHP 8.0+ |
-| Database | MySQL / MariaDB |
-| Database access | PDO prepared statements |
-| Authentication | PHP sessions + `password_hash()` |
+| Layer            | Used technology                            |
+| ---------------- | ------------------------------------------ |
+| Web server       | Apache, included with XAMPP                |
+| Backend          | PHP 8.0+                                   |
+| Database         | MySQL / MariaDB                            |
+| Database access  | PDO prepared statements                    |
+| Authentication   | PHP sessions + `password_hash()`           |
+| Email            | PHPMailer over SMTP (optional)             |
 | Document storage | Local `uploads/users/<user-id>/` directory |
-| Styling | Responsive custom CSS |
+| Styling          | Responsive custom CSS                      |
 
 ## Quick start with XAMPP
 
@@ -38,21 +56,48 @@ KYC Verify lets applicants create a secure account, complete a KYC application, 
    C:\xampp\htdocs\kyc-v4
    ```
 
-2. Open the XAMPP Control Panel and start **Apache** and **MySQL**.
+2. Install PHP dependencies (PHPMailer). With [Composer](https://getcomposer.org) installed:
 
-3. Open phpMyAdmin at [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+   ```text
+   cd C:\xampp\htdocs\kyc-v4
+   composer install
+   ```
 
-4. Select **Import**, choose [install.sql](install.sql), then click **Import**.
+3. Open the XAMPP Control Panel and start **Apache** and **MySQL**.
 
-5. Open the application:
+4. Open phpMyAdmin at [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+
+5. Select **Import**, choose [install.sql](install.sql), then click **Import**. This creates the `kyc_system` database, all tables, and the seeded staff accounts.
+
+6. Open the application:
 
    ```text
    http://localhost/kyc-v4/
    ```
 
-6. Register an applicant account and create an application.
+7. Register an applicant account, create an application, and submit it — the review team will be notified by email.
 
 > **Important:** If you imported an older version of this project schema, first remove the old `kyc_system` database in phpMyAdmin, then import the revised [install.sql](install.sql). This prevents old tables or columns from conflicting with the normalized design.
+
+## Email / SMTP configuration
+
+Email is **disabled by default** (`MAIL_ENABLED = false`). Every message is still recorded in the `email_logs` table, so you can verify notifications without a mail server.
+
+To send real email, edit [config.php](config.php):
+
+```php
+define('MAIL_ENABLED', true);
+define('SMTP_HOST', 'smtp.gmail.com');
+define('SMTP_PORT', 587);
+define('SMTP_USER', 'your-email@gmail.com');
+define('SMTP_PASS', 'your-app-password'); // Google App Password, not your normal password
+define('SMTP_ENCRYPTION', 'tls');
+define('MAIL_FROM', 'no-reply@kyc.local');
+define('MAIL_FROM_NAME', 'KYC Verify');
+define('APP_URL', 'http://localhost/kyc-v4'); // base URL used in email links
+```
+
+For Gmail you must enable **2-Step Verification** and create an **App Password**. For other providers adjust `SMTP_HOST`, `SMTP_PORT`, and `SMTP_ENCRYPTION` accordingly.
 
 ## Database configuration
 
@@ -80,14 +125,15 @@ users (id)
        └── audit_logs (application_id)
 ```
 
-| Table | Main fields | Purpose |
-| --- | --- | --- |
-| `users` | `id`, `username`, `email`, `password_hash`, `role` | Applicant, reviewer, and administrator accounts |
-| `addresses` | `user_id`, `permanent_address`, `temporary_address` | A user's address record |
-| `education` | `user_id`, `see_document`, `slc_document`, `graduate_document` | Paths for academic documents |
-| `additional_documents` | `user_id`, `citizenship_document`, `passport_document`, `license_document` | Paths for government identity documents |
-| `applications` | `applicant_id`, KYC details, `status`, review data | KYC workflow and review status |
-| `audit_logs` | `application_id`, `actor_id`, `action`, `detail` | Record of important application events |
+| Table                  | Main fields                                                                | Purpose                                         |
+| ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- |
+| `users`                | `id`, `username`, `email`, `password_hash`, `role`                         | Applicant, admin, super admin, and CEO accounts |
+| `addresses`            | `user_id`, `permanent_address`, `temporary_address`                        | A user's address record                         |
+| `education`            | `user_id`, `see_document`, `slc_document`, `graduate_document`             | Paths for academic documents                    |
+| `additional_documents` | `user_id`, `citizenship_document`, `passport_document`, `license_document` | Paths for government identity documents         |
+| `applications`         | `applicant_id`, KYC details, `status`, review data                         | KYC workflow and review status                  |
+| `audit_logs`           | `application_id`, `actor_id`, `action`, `detail`                           | Record of important application events          |
+| `email_logs`           | `recipient`, `subject`, `body`, `status`, `error`                          | Outbox for every email the system sends         |
 
 The `addresses`, `education`, and `additional_documents` tables each have a `UNIQUE user_id` constraint. This means each user has one current address record, one education-document record, and one additional-document record. All of these foreign keys use `ON DELETE CASCADE`.
 
@@ -99,85 +145,18 @@ DRAFT → SUBMITTED → UNDER REVIEW → APPROVED
                                 └→ RESUBMISSION REQUESTED → DRAFT/UPDATED → SUBMITTED
 ```
 
-1. An applicant registers and creates a draft application.
-2. The applicant saves personal KYC details and permanent/temporary addresses.
-3. The applicant uploads education and additional documents.
-4. The applicant submits the completed application.
-5. A reviewer or administrator approves it, rejects it, or requests resubmission with notes.
-6. Each important action is recorded in the audit log.
-
-## Document rules
-
-| Category | Required upload fields |
-| --- | --- |
-| Education | SEE document, SLC document, Graduate document |
-| Additional documents | Citizenship, Passport, License |
-| File types | `.jpg`, `.jpeg`, `.png`, `.pdf` |
-| Maximum file size | 5 MB per file |
-| Saved location | `uploads/users/<user-id>/` |
-
-On Linux or macOS, make sure Apache has write access to the `uploads` directory. On a standard Windows XAMPP installation this works by default.
-
-## Roles
-
-| Role | Permissions |
-| --- | --- |
-| `APPLICANT` | Register, edit drafts, save addresses, upload personal documents, and submit applications |
-| `REVIEWER` | View the review queue and approve, reject, or request resubmission |
-| `ADMIN` | Has all reviewer permissions |
-
-New accounts are applicants by default. Promote an account after it is registered by running this query in phpMyAdmin:
-
-```sql
-UPDATE users SET role = 'ADMIN' WHERE email = 'admin@example.com';
--- Or:
-UPDATE users SET role = 'REVIEWER' WHERE email = 'reviewer@example.com';
-```
-
 ## Project structure
 
 ```text
-kyc-v4/
-├── assets/
-│   └── style.css          # Responsive interface styling
-├── uploads/
-│   └── users/             # Uploaded user documents (created as needed)
-├── config.php             # XAMPP/MySQL settings and upload size
-├── database.php           # PDO MySQL connection
-├── functions.php          # Shared authentication, audit, and upload helpers
-├── index.php              # Application routes and user interface
-├── install.sql            # Complete MySQL schema
-└── README.md              # Project documentation
-```
-
-## Security measures included
-
-- Passwords are stored with PHP's `password_hash()`; plain-text passwords are never stored.
-- Database operations use PDO prepared statements.
-- Forms use CSRF tokens.
-- Sessions use `HttpOnly` cookies and regenerate the session ID on login.
-- Uploads are restricted by MIME type and file size.
-- Uploaded files use random generated filenames rather than the original filename.
-- Role checks protect the reviewer queue and review actions.
-
-## Troubleshooting
-
-| Problem | Solution |
-| --- | --- |
-| `Database error` message | Confirm MySQL is running and check credentials in `config.php`. |
-| `Access denied for user root` | Set the correct MySQL password in `DB_PASS` in `config.php`. |
-| `Table ... does not exist` | Import `install.sql` again into phpMyAdmin. |
-| Upload does not save | Ensure Apache can write to the `uploads` folder. |
-| Page not found | Confirm the project folder is inside `xampp/htdocs` and use the matching URL. |
-| Old schema conflicts | Drop the old `kyc_system` database, then import the current `install.sql`. |
-
-## Verification
-
-PHP syntax checks have been run for the project PHP files:
-
-```bash
-php -l index.php
-php -l functions.php
-php -l database.php
-php -l config.php
+index.php          Front controller — sessions, CSRF, routing
+config.php         Database, SMTP, and app settings
+database.php       PDO connection
+functions.php      Core helpers (output, uploads, queries, badges)
+auth.php           Login / role helpers
+mailer.php         Email sending via PHPMailer + email_logs
+actions.php        All POST handlers (auth, applications, review, users)
+layout.php         Shared header / footer / navigation
+pages/             One file per page (login, dashboard, review, users, …)
+assets/style.css   Design system and responsive layout
+install.sql        Schema + seeded staff accounts
 ```
