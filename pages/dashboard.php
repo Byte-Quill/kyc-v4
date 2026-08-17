@@ -8,13 +8,9 @@ $u = require_login();
 // ---------------------------------------------------------------------------
 if ($u['role'] === 'APPLICANT') {
     header_html('Dashboard');
-    $stats = [];
-    $s = db()->prepare('SELECT status, COUNT(*) total FROM applications WHERE applicant_id = ? GROUP BY status');
+    $s = db()->prepare("SELECT COUNT(*) FROM applications WHERE applicant_id = ? AND status = 'RESUBMISSION_REQUESTED'");
     $s->execute([$u['id']]);
-    foreach ($s->fetchAll() as $row) {
-        $stats[$row['status']] = (int) $row['total'];
-    }
-    $total = array_sum($stats);
+    $resubmissions = (int) $s->fetchColumn();
     ?>
     <div class="hero">
         <div>
@@ -28,46 +24,12 @@ if ($u['role'] === 'APPLICANT') {
         </form>
     </div>
 
-    <div class="stats">
-        <div class="stat"><strong><?= $total ?></strong><span>Total applications</span></div>
-        <div class="stat"><strong><?= $stats['SUBMITTED'] ?? 0 ?></strong><span>Awaiting review</span></div>
-        <div class="stat"><strong><?= $stats['APPROVED'] ?? 0 ?></strong><span>Approved</span></div>
-        <div class="stat"><strong><?= $stats['RESUBMISSION_REQUESTED'] ?? 0 ?></strong><span>Changes requested</span></div>
-    </div>
-
-    <?php if (($stats['RESUBMISSION_REQUESTED'] ?? 0) > 0): ?>
+    <?php if ($resubmissions > 0): ?>
         <div class="callout callout-warn">
             <strong>Action needed:</strong> one of your applications needs changes.
             <a class="button button-small" href="?page=applications">Review and resubmit</a>
         </div>
     <?php endif; ?>
-
-    <section class="card">
-        <h2>Recent applications</h2>
-        <?php
-        $s = db()->prepare('SELECT id, status, updated_at FROM applications WHERE applicant_id = ? ORDER BY updated_at DESC LIMIT 5');
-        $s->execute([$u['id']]);
-        $recent = $s->fetchAll();
-        if (!$recent): ?>
-            <p class="empty">No applications yet. Start one with the button above.</p>
-        <?php else: ?>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>ID</th><th>Status</th><th>Updated</th><th></th></tr></thead>
-                    <tbody>
-                    <?php foreach ($recent as $a): ?>
-                        <tr>
-                            <td>#<?= $a['id'] ?></td>
-                            <td><?= badge($a['status']) ?></td>
-                            <td><?= e(date('d M Y, H:i', strtotime($a['updated_at']))) ?></td>
-                            <td><a href="?page=application&id=<?= $a['id'] ?>">Open →</a></td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        <?php endif; ?>
-    </section>
     <?php
     footer_html();
     exit;
@@ -112,6 +74,7 @@ $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
     <div class="stat"><strong><?= $pendingApps ?></strong><span>Awaiting review</span></div>
     <div class="stat"><strong><?= $approvedApps ?></strong><span>Approved</span></div>
     <div class="stat"><strong><?= $rejectedApps ?></strong><span>Rejected</span></div>
+    <div class="stat"><strong><?= $resubmits ?></strong><span>Changes requested</span></div>
     <?php if ($u['role'] !== 'ADMIN'): ?>
         <div class="stat"><strong><?= $approvalRate ?>%</strong><span>Approval rate</span></div>
     <?php endif; ?>
@@ -120,7 +83,6 @@ $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
 <?php if ($u['role'] === 'CEO'): ?>
     <div class="stats">
         <div class="stat"><strong><?= $applicantCount ?></strong><span>Applicants</span></div>
-        <div class="stat"><strong><?= $resubmits ?></strong><span>Awaiting resubmission</span></div>
         <div class="stat"><strong><?= $userCount ?></strong><span>Total users</span></div>
     </div>
 <?php endif; ?>

@@ -1,27 +1,36 @@
-# KYC Verify
+# 🛡️ KYC Verify
 
-> A local **Know Your Customer (KYC)** application and document-verification system built with PHP, MySQL, and XAMPP.
+> A complete **Know Your Customer (KYC)** identity-verification system built with **plain PHP 8**, **MySQL**, and **XAMPP** — no Node.js, no Django, no external cloud services.
 
-![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white) ![XAMPP](https://img.shields.io/badge/Run%20with-XAMPP-FB7A24) ![License](https://img.shields.io/badge/Local%20project-ready-success)
+![PHP](https://img.shields.io/badge/PHP-8.0%2B-777BB4?logo=php&logoColor=white) ![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white) ![XAMPP](https://img.shields.io/badge/Run%20with-XAMPP-FB7A24) ![PHPMailer](https://img.shields.io/badge/Email-PHPMailer%206.x-30B980) ![License](https://img.shields.io/badge/License-MIT-blue)
 
-KYC Verify lets applicants create a secure account, complete a KYC application, provide their addresses, and upload academic and government documents. A three-tier review team — **CEO**, **Super Admin**, and **Admin** — reviews every submission, each with its own dashboard. The system emails all staff the moment an application is submitted and emails the applicant on every review decision.
+---
 
-## Roles
+## ✨ Highlights
 
-| Role            | Dashboard                            | Capabilities                                                         |
-| --------------- | ------------------------------------ | -------------------------------------------------------------------- |
-| **APPLICANT**   | Personal stats & recent applications | Create, complete, submit and resubmit applications; upload documents |
-| **ADMIN**       | Review queue & all applications      | Review, approve, reject, request resubmission                        |
-| **SUPER_ADMIN** | Review queue + user management       | Everything Admin can do, plus create users and change roles          |
-| **CEO**         | Company analytics                    | KPIs, approval rate, pipeline breakdown, email activity              |
+- 🛡️ **Role-based dashboards** — distinct views for Applicants, Admins, Super Admins, and the CEO
+- 📧 **Email notifications via SMTP (PHPMailer)** — all staff are notified the moment an application is submitted; the applicant is emailed on every review decision
+- 🗂️ **Complete audit trail** — every application event is recorded with the acting user
+- 📎 **Document uploads** — SEE, SLC & Graduate certificates plus Citizenship, Passport & License (JPG / PNG / PDF, 5 MB max)
+- 🔐 **Secure by default** — CSRF tokens, PDO prepared statements, bcrypt password hashing, escaped output, role-gated actions
+- 📊 **Staff-only analytics** — totals, pending / approved / rejected / changes-requested counts and the recent-applications tables are visible **only** to Admin, Super Admin, and CEO
 
-> **Seeded staff accounts** (password for all: `Password123`): `ceo@kyc.local`, `superadmin@kyc.local`, `admin@kyc.local`
+## 🧑‍🤝‍🧑 Roles & permissions
 
-## How staff (CEO / Admin / Super Admin) get accounts
+| Role            | Dashboard                       | Capabilities                                                              |
+| --------------- | ------------------------------- | ------------------------------------------------------------------------- |
+| **APPLICANT**   | Personal KYC dashboard          | Create, complete, submit and resubmit applications; upload documents      |
+| **ADMIN**       | Review queue & all applications | Review, approve, reject, request resubmission                             |
+| **SUPER_ADMIN** | Review queue + user management  | Everything Admin can do, plus create users, change roles, reset passwords |
+| **CEO**         | Company analytics               | KPIs, approval rate, pipeline breakdown, email activity                   |
+
+> 💡 **Stats are staff-only.** Applicants see a clean personal dashboard — a welcome hero, a **+ New application** button, and an **Action needed** callout when a resubmission is requested. They never see company-wide totals or other users' applications.
+
+## 🔑 How staff (CEO / Admin / Super Admin) get accounts
 
 Staff members **cannot sign up through the public registration page** — that form always creates an `APPLICANT` account (`role` defaults to `APPLICANT` in the database). Staff accounts are created in two ways:
 
-1. **Seeded accounts** — `install.sql` inserts one account per staff role when you import it. Sign in with the credentials above.
+1. **Seeded accounts** — `install.sql` inserts one account per staff role when you import the schema.
 2. **Super Admin creates them** — the **Super Admin** is the gatekeeper. After signing in as `superadmin@kyc.local`, open **Users** (`?page=users`) and:
    - **Create a user** and choose the role: `APPLICANT`, `ADMIN`, `SUPER_ADMIN`, or `CEO`
    - **Change an existing user's role** — for example, promote an applicant to Admin
@@ -29,7 +38,7 @@ Staff members **cannot sign up through the public registration page** — that f
 
 All user-management actions are protected by `require_role(['SUPER_ADMIN'])`, so a random person can never register themselves as CEO, Admin, or Super Admin.
 
-### Sign-in flow for staff
+### Sign-in flow
 
 ```text
 Sign in → ?page=login → role-based dashboard
@@ -39,9 +48,9 @@ Sign in → ?page=login → role-based dashboard
    APPLICANT    → personal KYC dashboard
 ```
 
-## Default staff logins & creating users
+## 🔑 Default staff logins
 
-The database comes with three staff accounts pre-seeded by `install.sql`. Use these to log in and explore each dashboard immediately:
+The database comes with three staff accounts pre-seeded by `install.sql`. Use these to explore each dashboard immediately:
 
 | Role            | Email                  | Password      |
 | --------------- | ---------------------- | ------------- |
@@ -49,7 +58,7 @@ The database comes with three staff accounts pre-seeded by `install.sql`. Use th
 | **SUPER_ADMIN** | `superadmin@kyc.local` | `Password123` |
 | **ADMIN**       | `admin@kyc.local`      | `Password123` |
 
-> On the login page you'll also see a **Demo accounts** panel with one-click sign-in buttons for each of these three staff roles — handy for testing.
+> ⚠️ These are **development-only demo credentials** — change them before any real deployment.
 
 The public **Create an account** page always registers an `APPLICANT`, so employees and staff are created by the Super Admin instead:
 
@@ -60,30 +69,12 @@ The public **Create an account** page always registers an `APPLICANT`, so employ
 
 You can also **change a user's role** or **reset a user's password** from the **Manage** menu next to each user in the list.
 
-## Highlights
-
-- Native PHP application — no Node.js, Django, Supabase, or external cloud service required
-- MySQL database designed for XAMPP/phpMyAdmin
-- Secure registration and sign-in using PHP password hashing and protected sessions
-- Role-based dashboards: distinct views for applicants, admins, super admins, and the CEO
-- **Email notifications via SMTP (PHPMailer)**:
-  - On submission → CEO, Super Admin, and Admin are all notified at once
-  - On resubmission request / rejection / approval → the applicant is emailed with review notes
-  - Every email is logged in `email_logs`, so the flow can be verified even without a mail server
-- Permanent and temporary address details
-- Education-document uploads: **SEE**, **SLC**, and **Graduate** certificates
-- Government-document uploads: **Citizenship**, **Passport**, and **License**
-- JPG, PNG, and PDF validation with a 5 MB upload limit
-- Draft, submit, approve, reject, and resubmission application workflow
-- Complete audit trail of every application event
-- Clean, responsive multi-file codebase (pages/actions split, zero legacy)
-
-## Technology
+## 🧱 Technology stack
 
 | Layer            | Used technology                            |
 | ---------------- | ------------------------------------------ |
 | Web server       | Apache, included with XAMPP                |
-| Backend          | PHP 8.0+                                   |
+| Backend          | PHP 8.0+ (structured, function-based)      |
 | Database         | MySQL / MariaDB                            |
 | Database access  | PDO prepared statements                    |
 | Authentication   | PHP sessions + `password_hash()`           |
@@ -91,52 +82,45 @@ You can also **change a user's role** or **reset a user's password** from the **
 | Document storage | Local `uploads/users/<user-id>/` directory |
 | Styling          | Responsive custom CSS                      |
 
-## Quick start with XAMPP
+## 🚀 Quick start with XAMPP
 
-1. Copy this project folder to your XAMPP web root, for example:
+1. **Copy the project** to your XAMPP web root, for example:
 
    ```text
    C:\xampp\htdocs\kyc-v4
    ```
 
-2. Create your local environment file from the template:
+2. **Create your local environment file** from the template:
 
    ```text
-   cp .env.example .env
+   cp .env.example .env            # Linux / macOS / Git Bash
+   copy .env.example .env          # Windows PowerShell / CMD
    ```
 
-   On Windows (Git Bash / PowerShell):
+   The `.env` file holds your database and SMTP settings. It is **ignored by git**, so your credentials never get committed. If you skip this step, the built-in defaults are used.
 
-   ```text
-   copy .env.example .env
-   ```
-
-   The `.env` file holds your database and SMTP settings. It is **ignored by git**, so your credentials never get committed. If you skip this step the built-in defaults are used.
-
-3. Install PHP dependencies (PHPMailer). With [Composer](https://getcomposer.org) installed:
+3. **Install PHP dependencies** (PHPMailer). With [Composer](https://getcomposer.org) installed:
 
    ```text
    cd C:\xampp\htdocs\kyc-v4
    composer install
    ```
 
-4. Open the XAMPP Control Panel and start **Apache** and **MySQL**.
+4. **Start Apache & MySQL** in the XAMPP Control Panel.
 
-5. Open phpMyAdmin at [http://localhost/phpmyadmin](http://localhost/phpmyadmin).
+5. **Import the database schema** — open [phpMyAdmin](http://localhost/phpmyadmin), select **Import**, choose [install.sql](install.sql), and click **Import**. This creates the `kyc_system` database, all tables, and the seeded staff accounts.
 
-6. Select **Import**, choose [install.sql](install.sql), then click **Import**. This creates the `kyc_system` database, all tables, and the seeded staff accounts.
-
-7. Open the application:
+6. **Open the application:**
 
    ```text
    http://localhost/kyc-v4/
    ```
 
-8. Register an applicant account, create an application, and submit it — the review team will be notified by email.
+7. **Test the flow** — register an applicant account, create an application, and submit it; the review team is notified by email.
 
-> **Important:** If you imported an older version of this project schema, first remove the old `kyc_system` database in phpMyAdmin, then import the revised [install.sql](install.sql). This prevents old tables or columns from conflicting with the normalized design.
+> ⚠️ **Important:** If you imported an older version of this project's schema, first drop the old `kyc_system` database in phpMyAdmin, then import the revised [install.sql](install.sql). This prevents old tables or columns from conflicting with the normalized design.
 
-## Configuration with `.env`
+## ⚙️ Configuration with `.env`
 
 All settings live in `.env` (copy it from `.env.example`). [config.php](config.php) loads the file at startup with a lightweight built-in parser — no extra package needed — and falls back to sensible defaults when a variable is missing or the file does not exist.
 
@@ -183,7 +167,7 @@ MAIL_FROM_NAME="KYC Verify"
 
 > `MAIL_ENABLED`, `SMTP_PORT`, and `MAX_UPLOAD_BYTES` are parsed as real boolean / integer values, so use `true`/`false` and plain numbers there.
 
-## Email / SMTP configuration
+## 📧 Email / SMTP configuration
 
 Email is **disabled by default** (`MAIL_ENABLED = false`). Every message is still recorded in the `email_logs` table, so you can verify notifications without a mail server.
 
@@ -201,9 +185,16 @@ MAIL_FROM_NAME="KYC Verify"
 APP_URL="http://localhost/kyc-v4"   # base URL used in email links
 ```
 
+**Who gets notified:**
+
+| Event                              | Recipient(s)                        |
+| ---------------------------------- | ----------------------------------- |
+| Application submitted              | All staff (CEO, Super Admin, Admin) |
+| Approved / Rejected / Resubmission | The applicant (with review notes)   |
+
 For Gmail you must enable **2-Step Verification** and create an **App Password**. For other providers adjust `SMTP_HOST`, `SMTP_PORT`, and `SMTP_ENCRYPTION` accordingly.
 
-## Database configuration
+## 🗄️ Database configuration
 
 The default XAMPP MySQL credentials are set in `.env`:
 
@@ -216,7 +207,7 @@ DB_PASS=""
 
 Update these values only if your MySQL username, password, or database name is different.
 
-## Database design
+## 🧬 Database design
 
 `users` is the parent table. All user-profile data uses `user_id` as a foreign key to `users.id`.
 
@@ -239,9 +230,9 @@ users (id)
 | `audit_logs`           | `application_id`, `actor_id`, `action`, `detail`                           | Record of important application events          |
 | `email_logs`           | `recipient`, `subject`, `body`, `status`, `error`                          | Outbox for every email the system sends         |
 
-The `addresses`, `education`, and `additional_documents` tables each have a `UNIQUE user_id` constraint. This means each user has one current address record, one education-document record, and one additional-document record. All of these foreign keys use `ON DELETE CASCADE`.
+The `addresses`, `education`, and `additional_documents` tables each have a `UNIQUE user_id` constraint — one current record per user — and all of these foreign keys use `ON DELETE CASCADE`.
 
-## Application workflow
+## 🔄 Application workflow
 
 ```text
 DRAFT → SUBMITTED → UNDER REVIEW → APPROVED
@@ -249,7 +240,13 @@ DRAFT → SUBMITTED → UNDER REVIEW → APPROVED
                                 └→ RESUBMISSION REQUESTED → DRAFT/UPDATED → SUBMITTED
 ```
 
-## Project structure
+- **DRAFT** — the applicant saves progress; everything is editable.
+- **SUBMITTED** — queued for review; all staff are notified by email.
+- **UNDER REVIEW** — a staff member has opened the application.
+- **APPROVED / REJECTED** — final decision; the applicant is emailed with review notes.
+- **RESUBMISSION REQUESTED** — the applicant must fix the flagged details and resubmit.
+
+## 📂 Project structure
 
 ```text
 index.php          Front controller — sessions, CSRF, routing
@@ -267,3 +264,20 @@ assets/style.css   Design system and responsive layout
 install.sql        Schema + seeded staff accounts
 .gitignore         Excludes .env, uploads, and vendor from git
 ```
+
+## 🛡️ Security
+
+| Area          | Implementation                                                                |
+| ------------- | ----------------------------------------------------------------------------- |
+| Passwords     | `password_hash()` / `password_verify()` (bcrypt)                              |
+| Sessions      | `session_regenerate_id()` on login; `httponly` + `SameSite=Lax` cookies       |
+| CSRF          | Token on every POST form, verified with `hash_equals()`                       |
+| SQL injection | PDO prepared statements with `ATTR_EMULATE_PREPARES => false`                 |
+| XSS           | All user output escaped with `htmlspecialchars()` via the `e()` helper        |
+| Uploads       | MIME sniffing (`finfo`), 5 MB cap, random stored filenames                    |
+| Authorization | `require_role()` gates every staff page and action; documents scoped per user |
+| Auditing      | `audit_logs` records every application event with the acting user             |
+
+## 📜 License
+
+Local project — free to use, modify, and learn from. The seeded demo credentials are **development-only**; rotate them for any real deployment.
