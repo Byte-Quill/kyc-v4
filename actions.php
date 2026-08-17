@@ -97,11 +97,9 @@ function create_application(array $u): void
     redirect('?page=application&id=' . $id);
 }
 
-function save_application(array $u): void
+/** Persist the personal and address fields from the current POST. */
+function save_application_fields(array $u, int $id): void
 {
-    $app = editable_application($u);
-    $id  = (int) $app['id'];
-
     $fields = ['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'id_expiry', 'issuing_country'];
     $values = [];
     foreach ($fields as $f) {
@@ -118,6 +116,14 @@ function save_application(array $u): void
     db()->prepare('INSERT INTO addresses (user_id, permanent_address, temporary_address) VALUES (?, ?, ?)
                    ON DUPLICATE KEY UPDATE permanent_address = VALUES(permanent_address), temporary_address = VALUES(temporary_address)')
         ->execute([$u['id'], $permanent, $temporary ?: null]);
+}
+
+function save_application(array $u): void
+{
+    $app = editable_application($u);
+    $id  = (int) $app['id'];
+
+    save_application_fields($u, $id);
 
     log_action($id, (int) $u['id'], 'UPDATED', 'KYC information and addresses updated.');
     flash('success', 'Draft saved.');
@@ -143,6 +149,12 @@ function submit_application(array $u): void
     $app = editable_application($u);
     $id  = (int) $app['id'];
 
+    // Persist the fields from this request first, so a single "Submit" click
+    // saves and submits — no need to hit "Save draft" beforehand.
+    save_application_fields($u, $id);
+
+    // Re-read the freshly saved values and validate them.
+    $app = application_for($id);
     foreach (['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'permanent_address'] as $f) {
         if (!$app[$f]) {
             throw new RuntimeException('Complete personal details and permanent address before submitting.');
