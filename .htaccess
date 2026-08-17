@@ -2,3 +2,26 @@ Options -Indexes
 <FilesMatch "\.(sql|md)$">
   Require all denied
 </FilesMatch>
+
+# ---------------------------------------------------------------------------
+# SPA + API routing
+#
+# In production the built React app lives in dist/ and index.php serves it as
+# a front controller: real files under dist/ are streamed straight through,
+# everything else (deep client-side routes like /application/5) gets the SPA
+# shell. API endpoints (api.php / api_actions.php) are real files, so Apache
+# serves them directly.
+#
+# Requests that don't map to a real file or directory fall through to index.php.
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # If the request maps to an existing file or directory, serve it as-is.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else goes through the SPA front controller.
+  RewriteRule ^ index.php [L]
+</IfModule>

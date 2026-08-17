@@ -43,6 +43,63 @@ function verify_csrf(): void
     }
 }
 
+/**
+ * Verify the CSRF token delivered via the X-CSRF-Token header, falling back
+ * to the classic hidden form field (used by multipart uploads). Shared by
+ * the JSON API endpoints.
+ */
+function verify_csrf_api(): void
+{
+    $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($_POST['csrf'] ?? '');
+    if (!hash_equals($_SESSION['csrf'] ?? '', (string) $token)) {
+        json_error('Invalid form token. Refresh the page and try again.', 419);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// JSON API helpers
+// ---------------------------------------------------------------------------
+
+/** Send a JSON response and terminate the request. */
+function json_response(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($payload);
+    exit;
+}
+
+/** Success envelope: { ok: true, data, redirect?, flash? } */
+function json_ok(mixed $data = null, ?string $redirect = null, ?string $flash = null): never
+{
+    $payload = ['ok' => true, 'data' => $data];
+    if ($redirect !== null) {
+        $payload['redirect'] = $redirect;
+    }
+    if ($flash !== null) {
+        $payload['flash'] = $flash;
+    }
+    json_response($payload);
+}
+
+/** Error envelope: { ok: false, error } */
+function json_error(string $message, int $status = 400): never
+{
+    json_response(['ok' => false, 'error' => $message], $status);
+}
+
+/** Read a JSON request body into an associative array (falls back to $_POST). */
+function json_input(): array
+{
+    $raw = file_get_contents('php://input');
+    if ($raw === false || $raw === '') {
+        return $_POST;
+    }
+    $data = json_decode($raw, true);
+    return is_array($data) ? $data : $_POST;
+}
+
 // ---------------------------------------------------------------------------
 // Audit logging
 // ---------------------------------------------------------------------------
@@ -105,6 +162,15 @@ function document_link(?string $file, int $userId): string
         return '<span class="muted">Not uploaded</span>';
     }
     return '<a href="uploads/users/' . $userId . '/' . rawurlencode($file) . '" target="_blank" rel="noopener">View uploaded document</a>';
+}
+
+/** Absolute URL for a stored document — used by the JSON API. */
+function document_url(?string $file, int $userId): ?string
+{
+    if (!$file) {
+        return null;
+    }
+    return 'uploads/users/' . $userId . '/' . rawurlencode($file);
 }
 
 // ---------------------------------------------------------------------------

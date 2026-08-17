@@ -29,6 +29,26 @@ function require_role(array $roles): array
     return $u;
 }
 
+/** Login guard for the JSON API — returns a 401 JSON envelope instead of redirecting. */
+function api_require_login(): array
+{
+    $u = user();
+    if (!$u) {
+        json_error('Please sign in first.', 401);
+    }
+    return $u;
+}
+
+/** Role guard for the JSON API — returns a 403 JSON envelope instead of an HTML page. */
+function api_require_role(array $roles): array
+{
+    $u = api_require_login();
+    if (!in_array($u['role'], $roles, true)) {
+        json_error('You do not have permission to perform this action.', 403);
+    }
+    return $u;
+}
+
 function is_staff(): bool
 {
     $u = user();
