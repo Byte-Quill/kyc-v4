@@ -24,11 +24,13 @@ function handle_action(string $action): void
             }
             db()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)')
                 ->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
+            db()->prepare("INSERT INTO user_roles (user_id, role) VALUES (?, 'APPLICANT')")
+                ->execute([(int) db()->lastInsertId()]);
             flash('success', 'Account created. Please sign in.');
             redirect('?page=login');
 
         case 'login':
-            $s = db()->prepare('SELECT * FROM users WHERE email = ?');
+            $s = db()->prepare('SELECT u.*, ur.role FROM users u JOIN user_roles ur ON ur.user_id = u.id WHERE u.email = ?');
             $s->execute([strtolower(trim($_POST['email'] ?? ''))]);
             $account = $s->fetch();
             if (!$account || !password_verify($_POST['password'] ?? '', $account['password_hash'])) {
@@ -216,8 +218,10 @@ function create_user(array $u): void
     if (!in_array($role, $roles, true)) {
         throw new RuntimeException('Choose a valid role.');
     }
-    db()->prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)')
-        ->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT), $role]);
+    db()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)')
+        ->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
+    db()->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')
+        ->execute([(int) db()->lastInsertId(), $role]);
     flash('success', 'User "' . $username . '" created as ' . role_label($role) . '.');
     redirect('?page=users');
 }
@@ -242,7 +246,9 @@ function update_user(array $u): void
         throw new RuntimeException('You cannot change your own role.');
     }
 
-    db()->prepare('UPDATE users SET role = ? WHERE id = ?')->execute([$role, $id]);
+    db()->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)
+                   ON DUPLICATE KEY UPDATE role = VALUES(role)')
+        ->execute([$id, $role]);
     flash('success', 'Role updated for "' . $targetUser['username'] . '".');
     redirect('?page=users');
 }
@@ -275,7 +281,9 @@ function reset_password(array $u): void
 /** Notify every staff account (CEO, Super Admin, Admin) that an application was submitted. */
 function notify_staff_of_submission(int $applicationId, array $app): void
 {
-    $staff = db()->query("SELECT email, username, role FROM users WHERE role IN ('CEO', 'SUPER_ADMIN', 'ADMIN')")
+    $staff = db()->query("SELECT u.email, u.username, ur.role
+                          FROM users u JOIN user_roles ur ON ur.user_id = u.id
+                          WHERE ur.role IN ('CEO', 'SUPER_ADMIN', 'ADMIN')")
         ->fetchAll();
 
     $url  = APP_URL . '/?page=application&id=' . $applicationId;

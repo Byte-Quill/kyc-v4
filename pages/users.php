@@ -4,7 +4,9 @@ declare(strict_types=1);
 $u = require_role(['SUPER_ADMIN']);
 header_html('User management');
 
-$users = db()->query('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC')->fetchAll();
+$users = db()->query('SELECT u.id, u.username, u.email, ur.role, u.created_at
+                      FROM users u JOIN user_roles ur ON ur.user_id = u.id
+                      ORDER BY u.created_at DESC')->fetchAll();
 $roles = ['APPLICANT', 'ADMIN', 'SUPER_ADMIN', 'CEO'];
 ?>
 <div class="hero compact">
@@ -47,7 +49,7 @@ $roles = ['APPLICANT', 'ADMIN', 'SUPER_ADMIN', 'CEO'];
         <div class="stats stats-inline">
             <div class="stat"><strong><?= count($users) ?></strong><span>Total users</span></div>
             <?php
-            $counts = db()->query("SELECT role, COUNT(*) c FROM users GROUP BY role")->fetchAll();
+            $counts = db()->query('SELECT role, COUNT(*) c FROM user_roles GROUP BY role')->fetchAll();
             foreach ($counts as $row): ?>
                 <div class="stat"><strong><?= $row['c'] ?></strong><span><?= e(role_label($row['role'])) ?>s</span></div>
             <?php endforeach; ?>

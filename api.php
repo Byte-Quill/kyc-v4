@@ -43,7 +43,7 @@ switch ($action) {
             $rejectedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
             $resubmits     = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
             $userCount     = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
-            $applicantCount = (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'APPLICANT'")->fetchColumn();
+            $applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
             $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
 
             $recent = db()->query('SELECT a.id, a.status, a.updated_at, u.username applicant_name
@@ -146,8 +146,10 @@ switch ($action) {
 
     case 'users':
         api_require_role(['SUPER_ADMIN']);
-        $users  = db()->query('SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC')->fetchAll();
-        $counts = db()->query("SELECT role, COUNT(*) c FROM users GROUP BY role")->fetchAll();
+        $users  = db()->query('SELECT u.id, u.username, u.email, ur.role, u.created_at
+                               FROM users u JOIN user_roles ur ON ur.user_id = u.id
+                               ORDER BY u.created_at DESC')->fetchAll();
+        $counts = db()->query('SELECT role, COUNT(*) c FROM user_roles GROUP BY role')->fetchAll();
         json_ok([
             'users' => $users,
             'counts' => $counts,
@@ -164,7 +166,7 @@ switch ($action) {
         $resubmits   = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
         $pending     = $submitted + $underReview;
         $approvalRate = $total > 0 ? round($approved / $total * 100) : 0;
-        $applicants  = (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'APPLICANT'")->fetchColumn();
+        $applicants  = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
         $emailsSent  = (int) db()->query('SELECT COUNT(*) FROM email_logs')->fetchColumn();
         $emailsFailed = (int) db()->query("SELECT COUNT(*) FROM email_logs WHERE status = 'FAILED'")->fetchColumn();
 

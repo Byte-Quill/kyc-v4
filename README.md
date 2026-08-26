@@ -28,7 +28,7 @@
 
 ## 🔑 How staff (CEO / Admin / Super Admin) get accounts
 
-Staff members **cannot sign up through the public registration page** — that form always creates an `APPLICANT` account (`role` defaults to `APPLICANT` in the database). Staff accounts are created in two ways:
+Staff members **cannot sign up through the public registration page** — that form always creates an `APPLICANT` account (an `APPLICANT` row is written to the `user_roles` table). Staff accounts are created in two ways:
 
 1. **Seeded accounts** — `install.sql` inserts one account per staff role when you import the schema.
 2. **Super Admin creates them** — the **Super Admin** is the gatekeeper. After signing in as `superadmin@kyc.local`, open **Users** (`?page=users`) and:
@@ -213,6 +213,7 @@ Update these values only if your MySQL username, password, or database name is d
 
 ```text
 users (id)
+ ├── user_roles (user_id)
  ├── addresses (user_id)
  ├── education (user_id)
  ├── additional_documents (user_id)
@@ -220,15 +221,16 @@ users (id)
        └── audit_logs (application_id)
 ```
 
-| Table                  | Main fields                                                                | Purpose                                         |
-| ---------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- |
-| `users`                | `id`, `username`, `email`, `password_hash`, `role`                         | Applicant, admin, super admin, and CEO accounts |
-| `addresses`            | `user_id`, `permanent_address`, `temporary_address`                        | A user's address record                         |
-| `education`            | `user_id`, `see_document`, `slc_document`, `graduate_document`             | Paths for academic documents                    |
-| `additional_documents` | `user_id`, `citizenship_document`, `passport_document`, `license_document` | Paths for government identity documents         |
-| `applications`         | `applicant_id`, KYC details, `status`, review data                         | KYC workflow and review status                  |
-| `audit_logs`           | `application_id`, `actor_id`, `action`, `detail`                           | Record of important application events          |
-| `email_logs`           | `recipient`, `subject`, `body`, `status`, `error`                          | Outbox for every email the system sends         |
+| Table                  | Main fields                                                                | Purpose                                            |
+| ---------------------- | -------------------------------------------------------------------------- | -------------------------------------------------- |
+| `users`                | `id`, `username`, `email`, `password_hash`                                 | Applicant, admin, super admin, and CEO accounts    |
+| `user_roles`           | `user_id`, `role`                                                          | The only place roles are stored (one row per user) |
+| `addresses`            | `user_id`, `permanent_address`, `temporary_address`                        | A user's address record                            |
+| `education`            | `user_id`, `see_document`, `slc_document`, `graduate_document`             | Paths for academic documents                       |
+| `additional_documents` | `user_id`, `citizenship_document`, `passport_document`, `license_document` | Paths for government identity documents            |
+| `applications`         | `applicant_id`, KYC details, `status`, review data                         | KYC workflow and review status                     |
+| `audit_logs`           | `application_id`, `actor_id`, `action`, `detail`                           | Record of important application events             |
+| `email_logs`           | `recipient`, `subject`, `body`, `status`, `error`                          | Outbox for every email the system sends            |
 
 The `addresses`, `education`, and `additional_documents` tables each have a `UNIQUE user_id` constraint — one current record per user — and all of these foreign keys use `ON DELETE CASCADE`.
 

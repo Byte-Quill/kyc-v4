@@ -17,31 +17,23 @@ CREATE TABLE users (
     username VARCHAR(120) NOT NULL,
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM(
-        'APPLICANT',
-        'ADMIN',
-        'SUPER_ADMIN',
-        'CEO'
-    ) NOT NULL DEFAULT 'APPLICANT',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------------
--- Role assignment table. Maps a user (users.id) to a role. Kept separate from
--- users.role so role history / multiple assignments can be tracked if needed.
+-- The single role table. Every user's role lives here and ONLY here — exactly
+-- one row per user (user_id is the primary key). The users table has no role
+-- column; all code reads and writes roles through this table.
 -- ---------------------------------------------------------------------------
 CREATE TABLE user_roles (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL,
+    user_id INT UNSIGNED PRIMARY KEY,
     role ENUM(
         'APPLICANT',
         'ADMIN',
         'SUPER_ADMIN',
         'CEO'
     ) NOT NULL DEFAULT 'APPLICANT',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-    INDEX idx_user_roles_user (user_id)
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 -- One address record per user. Both addresses are stored independently.
@@ -136,24 +128,27 @@ INSERT INTO
     users (
         username,
         email,
-        password_hash,
-        role
+        password_hash
     )
 VALUES (
         'CEO',
         'ceo@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6',
-        'CEO'
+        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
     ),
     (
         'Super Admin',
         'superadmin@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6',
-        'SUPER_ADMIN'
+        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
     ),
     (
         'Admin',
         'admin@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6',
-        'ADMIN'
+        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
     );
+
+-- Roles for the seeded staff accounts live in user_roles (one row per user).
+INSERT INTO
+    user_roles (user_id, role)
+VALUES (1, 'CEO'),
+    (2, 'SUPER_ADMIN'),
+    (3, 'ADMIN');

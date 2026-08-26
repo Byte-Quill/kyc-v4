@@ -15,7 +15,7 @@ $rejected  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status =
 $resubmits = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
 $pending   = $submitted + $underReview;
 $approvalRate = $total > 0 ? round($approved / $total * 100) : 0;
-$applicants   = (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'APPLICANT'")->fetchColumn();
+$applicants   = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
 $emailsSent   = (int) db()->query('SELECT COUNT(*) FROM email_logs')->fetchColumn();
 $emailsFailed = (int) db()->query("SELECT COUNT(*) FROM email_logs WHERE status = 'FAILED'")->fetchColumn();
 ?>

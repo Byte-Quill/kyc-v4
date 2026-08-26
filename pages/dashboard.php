@@ -48,7 +48,7 @@ $approvedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE stat
 $rejectedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
 $resubmits     = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
 $userCount     = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
-$applicantCount = (int) db()->query("SELECT COUNT(*) FROM users WHERE role = 'APPLICANT'")->fetchColumn();
+$applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
 $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
 ?>
 <div class="hero">
