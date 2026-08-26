@@ -245,6 +245,58 @@ users (id)
 
 The `addresses`, `education`, and `additional_documents` tables each have a `UNIQUE user_id` constraint — one current record per user — and all of these foreign keys use `ON DELETE CASCADE`.
 
+### 🔗 Understanding the IDs (`id`, `user_id`, `application_id`, `reviewer_id`, `actor_id`)
+
+Every ID in the database is either a table's **own primary key** or a **foreign key pointing to another table**. This diagram shows who points to whom:
+
+```mermaid
+erDiagram
+    users ||--|| user_roles : "user_id"
+    users ||--|| addresses : "user_id"
+    users ||--|| education : "user_id"
+    users ||--|| additional_documents : "user_id"
+    users ||--o{ applications : "applicant_id"
+    users ||--o{ applications : "reviewer_id"
+    applications ||--o{ audit_logs : "application_id"
+    users ||--o{ audit_logs : "actor_id"
+
+    users {
+        int id PK "the one true user id"
+    }
+    applications {
+        int id PK "application number"
+        int applicant_id FK "who submitted it"
+        int reviewer_id FK "who reviewed it"
+    }
+    audit_logs {
+        int id PK "event number"
+        int application_id FK "which application"
+        int actor_id FK "who performed the action"
+    }
+```
+
+| ID | Where it lives | What it means |
+| -- | -------------- | ------------- |
+| `id` | `users.id`, `applications.id`, `audit_logs.id`, `email_logs.id` | The table's **own primary key** — a unique number for each row in that table |
+| `user_id` | `user_roles`, `addresses`, `education`, `additional_documents` | Points to `users.id`. These tables hold **one row per user**, so `user_id` is also their primary key (no extra `id` needed) |
+| `applicant_id` | `applications` | Points to `users.id` — the user **who submitted** the application |
+| `reviewer_id` | `applications` | Points to `users.id` — the staff member **who reviewed** it (NULL until reviewed) |
+| `application_id` | `audit_logs` | Points to `applications.id` — which application the event belongs to |
+| `actor_id` | `audit_logs` | Points to `users.id` — the user **who performed** the logged action |
+
+**Why different names?** `applicant_id`, `reviewer_id`, and `actor_id` all reference the same `users` table, but each name describes a different *role* that user plays. A single person can be an applicant on one application and a reviewer on another — the names make the SQL self-explaining:
+
+```sql
+-- "Who submitted application 5, and who reviewed it?"
+SELECT applicant.username AS submitted_by, reviewer.username AS reviewed_by
+FROM applications a
+JOIN users applicant ON applicant.id = a.applicant_id
+LEFT JOIN users reviewer ON reviewer.id = a.reviewer_id
+WHERE a.id = 5;
+```
+
+> 💡 **Rule of thumb:** one-to-one tables (`user_roles`, `addresses`, `education`, `additional_documents`) are keyed by `user_id` only; one-to-many tables (`applications`, `audit_logs`, `email_logs`) keep their own `id` because one user/application can have many rows.
+
 ## 🔄 Application workflow
 
 ```text
