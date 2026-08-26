@@ -15,6 +15,17 @@
 - 🔐 **Secure by default** — CSRF tokens, PDO prepared statements, bcrypt password hashing, escaped output, role-gated actions
 - 📊 **Staff-only analytics** — totals, pending / approved / rejected / changes-requested counts and the recent-applications tables are visible **only** to Admin, Super Admin, and CEO
 
+## 📚 Documentation
+
+New to the codebase? Start here:
+
+| Document                                     | What it explains                                                                                                |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Request lifecycle, file map, roles & permissions, workflow states, security model, contributor conventions      |
+| [docs/DATABASE.md](docs/DATABASE.md)         | Full schema reference, design rules (why `user_id` is the PK in one-to-one tables), seeded data, common queries |
+
+Every PHP file also starts with a docblock describing its own purpose.
+
 ## 🧑‍🤝‍🧑 Roles & permissions
 
 | Role            | Dashboard                       | Capabilities                                                              |
@@ -262,6 +273,7 @@ mailer.php         Email sending via PHPMailer + email_logs
 actions.php        All POST handlers (auth, applications, review, users)
 layout.php         Shared header / footer / navigation
 pages/             One file per page (login, dashboard, review, users, ...)
+docs/              Developer guides (ARCHITECTURE.md, DATABASE.md)
 assets/style.css   Design system and responsive layout
 install.sql        Schema + seeded staff accounts
 api.php            JSON read API (optional, kept for integrations)
