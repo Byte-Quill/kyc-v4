@@ -26,6 +26,24 @@ CREATE TABLE users (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 
+-- ---------------------------------------------------------------------------
+-- Role assignment table. Maps a user (users.id) to a role. Kept separate from
+-- users.role so role history / multiple assignments can be tracked if needed.
+-- ---------------------------------------------------------------------------
+CREATE TABLE user_roles (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    role ENUM(
+        'APPLICANT',
+        'ADMIN',
+        'SUPER_ADMIN',
+        'CEO'
+    ) NOT NULL DEFAULT 'APPLICANT',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    INDEX idx_user_roles_user (user_id)
+) ENGINE = InnoDB;
+
 -- One address record per user. Both addresses are stored independently.
 CREATE TABLE addresses (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
