@@ -36,20 +36,18 @@ CREATE TABLE user_roles (
     CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
--- One address record per user. Both addresses are stored independently.
+-- One address record per user. user_id is the primary key (one row per user).
 CREATE TABLE addresses (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL UNIQUE,
+    user_id INT UNSIGNED PRIMARY KEY,
     permanent_address TEXT NOT NULL,
     temporary_address TEXT NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_addresses_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
--- One set of educational certificates per user. Values are uploaded file paths.
+-- One set of educational certificates per user. user_id is the primary key.
 CREATE TABLE education (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL UNIQUE,
+    user_id INT UNSIGNED PRIMARY KEY,
     see_document VARCHAR(255) NULL,
     slc_document VARCHAR(255) NULL,
     graduate_document VARCHAR(255) NULL,
@@ -57,10 +55,9 @@ CREATE TABLE education (
     CONSTRAINT fk_education_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
--- Additional government identity documents for one user.
+-- Additional government identity documents for one user. user_id is the primary key.
 CREATE TABLE additional_documents (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id INT UNSIGNED NOT NULL UNIQUE,
+    user_id INT UNSIGNED PRIMARY KEY,
     citizenship_document VARCHAR(255) NULL,
     passport_document VARCHAR(255) NULL,
     license_document VARCHAR(255) NULL,
