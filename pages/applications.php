@@ -1,4 +1,11 @@
 <?php
+/**
+ * pages/applications.php — Applications list (?page=applications).
+ *
+ * Staff (ADMIN / SUPER_ADMIN / CEO) see every application in the company;
+ * applicants see only their own. Applicants also get the "+ New application"
+ * button, which POSTs action=create_application.
+ */
 declare(strict_types=1);
 
 $u = require_login();

@@ -1,4 +1,20 @@
 <?php
+/**
+ * auth.php — Authentication & authorization helpers.
+ *
+ * The logged-in user is stored in $_SESSION['user'] (set on login in
+ * actions.php / api_actions.php). These helpers read that session data and
+ * enforce access rules:
+ *   - user() ................. current user array or null
+ *   - require_login() ........ page guard — redirects to login if signed out
+ *   - require_role() ......... page guard — 403 unless user has one of the roles
+ *   - api_require_login() .... JSON API guard — returns a 401 JSON error
+ *   - api_require_role() ..... JSON API guard — returns a 403 JSON error
+ *   - is_staff(), role_label()
+ *
+ * Roles: APPLICANT (default), ADMIN, SUPER_ADMIN, CEO.
+ * STAFF_ROLES can review applications and see every application.
+ */
 declare(strict_types=1);
 
 // Staff roles that can review applications and see every application.

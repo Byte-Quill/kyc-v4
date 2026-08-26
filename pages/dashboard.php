@@ -1,4 +1,15 @@
 <?php
+/**
+ * pages/dashboard.php — Role-based home page (?page=dashboard).
+ *
+ * APPLICANT: personal welcome hero, "+ New application" button and an
+ *            "Action needed" callout when a resubmission is requested.
+ *            Applicants never see company-wide statistics.
+ * STAFF (ADMIN / SUPER_ADMIN / CEO): company stats (totals, pending,
+ *            approved, rejected, changes requested, approval rate) plus the
+ *            latest-applications table. CEO additionally sees applicant and
+ *            user counts; SUPER_ADMIN gets a shortcut to user management.
+ */
 declare(strict_types=1);
 
 $u = require_login();

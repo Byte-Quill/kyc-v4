@@ -1,4 +1,11 @@
 <?php
+/**
+ * pages/review.php — Review queue (?page=review). Staff only.
+ *
+ * Lists all applications with status SUBMITTED or UNDER_REVIEW, oldest
+ * first. Each row links to the application page where the actual review
+ * decision (approve / reject / request changes) is made.
+ */
 declare(strict_types=1);
 
 $u = require_role(STAFF_ROLES);

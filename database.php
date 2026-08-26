@@ -1,4 +1,16 @@
 <?php
+/**
+ * database.php — Database connection layer.
+ *
+ * Provides db(), a shared PDO connection to the MySQL/MariaDB database.
+ * The connection is created once per request (static singleton) with:
+ *   - exceptions on errors (ERRMODE_EXCEPTION)
+ *   - associative-array fetches (FETCH_ASSOC)
+ *   - real prepared statements (EMULATE_PREPARES off) — SQL-injection safe
+ *
+ * Connection settings (host, name, user, password) come from config.php,
+ * which reads them from the .env file.
+ */
 require_once __DIR__ . '/config.php';
 
 function db(): PDO {

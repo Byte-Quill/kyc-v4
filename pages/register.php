@@ -1,4 +1,11 @@
 <?php
+/**
+ * pages/register.php — Public account registration.
+ *
+ * Always creates an APPLICANT account (a matching APPLICANT row is written
+ * to user_roles). Staff accounts (ADMIN / SUPER_ADMIN / CEO) can only be
+ * created by the Super Admin on the Users page.
+ */
 declare(strict_types=1);
 
 header_html('Create account');

@@ -1,4 +1,11 @@
 <?php
+/**
+ * pages/login.php — Sign-in page (public).
+ *
+ * Renders the login form. Submitting it POSTs action=login to index.php,
+ * which dispatches to actions.php. On success the user lands on the
+ * role-based dashboard; on failure an error flash is shown.
+ */
 declare(strict_types=1);
 
 header_html('Sign in');

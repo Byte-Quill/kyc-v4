@@ -1,4 +1,11 @@
 <?php
+/**
+ * pages/ceo.php — CEO analytics page (?page=ceo). CEO only.
+ *
+ * Company-wide KPIs: pipeline totals, approval rate, registered applicants,
+ * email activity (sent/failed from email_logs), a pipeline-by-status bar
+ * chart and the most recent submissions.
+ */
 declare(strict_types=1);
 
 $u = require_role(['CEO']);

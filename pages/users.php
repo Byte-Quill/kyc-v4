@@ -1,4 +1,13 @@
 <?php
+/**
+ * pages/users.php — User management (?page=users). SUPER_ADMIN only.
+ *
+ * The Super Admin can:
+ *   - create users with any role (POST action=create_user)
+ *   - change a user's role (POST action=update_user) — writes to user_roles
+ *   - reset a user's password (POST action=reset_password)
+ * Also shows platform summary counts grouped by role.
+ */
 declare(strict_types=1);
 
 $u = require_role(['SUPER_ADMIN']);

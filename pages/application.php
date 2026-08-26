@@ -1,4 +1,17 @@
 <?php
+/**
+ * pages/application.php — Single application detail page (?page=application&id=N).
+ *
+ * Shows everything about one KYC application, adapting to the viewer:
+ *   - Owner + editable status (DRAFT / RESUBMISSION_REQUESTED):
+ *       editable form, document upload forms, Save / Submit buttons
+ *   - Otherwise: read-only summary
+ *   - Staff + reviewable status (SUBMITTED / UNDER_REVIEW):
+ *       the review decision panel (Approve / Reject / Request changes)
+ *   - Final outcome card + full audit trail for everyone with access
+ *
+ * Access rule: only the applicant or staff may view (can_access()).
+ */
 declare(strict_types=1);
 
 $u  = require_login();

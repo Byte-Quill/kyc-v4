@@ -1,4 +1,17 @@
 <?php
+/**
+ * functions.php — Core helper library (loaded by every entry point).
+ *
+ * Contains the shared building blocks used across the whole app:
+ *   - Output & escaping ....... e(), redirect(), flash(), flashes()
+ *   - CSRF protection ......... csrf(), verify_csrf(), verify_csrf_api()
+ *   - JSON API envelopes ...... json_response(), json_ok(), json_error(), json_input()
+ *   - Audit trail ............. log_action()
+ *   - Application queries ..... application_for(), can_access()
+ *   - Status display .......... status_class(), format_status(), badge()
+ *   - Document links .......... document_link(), document_url()
+ *   - File uploads ............ store_upload(), save_user_document(), DOCUMENT_FIELDS
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/database.php';
