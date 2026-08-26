@@ -262,8 +262,16 @@ layout.php         Shared header / footer / navigation
 pages/             One file per page (login, dashboard, review, users, ...)
 assets/style.css   Design system and responsive layout
 install.sql        Schema + seeded staff accounts
+api.php            JSON read API (optional, kept for integrations)
+api_actions.php    JSON write API (optional, kept for integrations)
+frontend/          Optional React/Vite reference app (not required to run)
 .gitignore         Excludes .env, uploads, and vendor from git
 ```
+
+> 💡 **Pure PHP + MySQL.** The system runs entirely on server-rendered PHP —
+> no Node.js, no build step. Copy the folder into `htdocs`, import
+> `install.sql`, and open it in the browser. The `frontend/` React app is kept
+> only as a reference and is not needed.
 
 ## 🛡️ Security
 

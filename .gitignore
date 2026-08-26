@@ -5,6 +5,7 @@
 
 # Dependencies (install via `composer install`)
 /vendor/
+composer.phar
 
 # Uploaded documents (keep the folder, ignore contents)
 /uploads/*
