@@ -275,16 +275,16 @@ erDiagram
     }
 ```
 
-| ID | Where it lives | What it means |
-| -- | -------------- | ------------- |
-| `id` | `users.id`, `applications.id`, `audit_logs.id`, `email_logs.id` | The table's **own primary key** — a unique number for each row in that table |
-| `user_id` | `user_roles`, `addresses`, `education`, `additional_documents` | Points to `users.id`. These tables hold **one row per user**, so `user_id` is also their primary key (no extra `id` needed) |
-| `applicant_id` | `applications` | Points to `users.id` — the user **who submitted** the application |
-| `reviewer_id` | `applications` | Points to `users.id` — the staff member **who reviewed** it (NULL until reviewed) |
-| `application_id` | `audit_logs` | Points to `applications.id` — which application the event belongs to |
-| `actor_id` | `audit_logs` | Points to `users.id` — the user **who performed** the logged action |
+| ID               | Where it lives                                                  | What it means                                                                                                               |
+| ---------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `id`             | `users.id`, `applications.id`, `audit_logs.id`, `email_logs.id` | The table's **own primary key** — a unique number for each row in that table                                                |
+| `user_id`        | `user_roles`, `addresses`, `education`, `additional_documents`  | Points to `users.id`. These tables hold **one row per user**, so `user_id` is also their primary key (no extra `id` needed) |
+| `applicant_id`   | `applications`                                                  | Points to `users.id` — the user **who submitted** the application                                                           |
+| `reviewer_id`    | `applications`                                                  | Points to `users.id` — the staff member **who reviewed** it (NULL until reviewed)                                           |
+| `application_id` | `audit_logs`                                                    | Points to `applications.id` — which application the event belongs to                                                        |
+| `actor_id`       | `audit_logs`                                                    | Points to `users.id` — the user **who performed** the logged action                                                         |
 
-**Why different names?** `applicant_id`, `reviewer_id`, and `actor_id` all reference the same `users` table, but each name describes a different *role* that user plays. A single person can be an applicant on one application and a reviewer on another — the names make the SQL self-explaining:
+**Why different names?** `applicant_id`, `reviewer_id`, and `actor_id` all reference the same `users` table, but each name describes a different _role_ that user plays. A single person can be an applicant on one application and a reviewer on another — the names make the SQL self-explaining:
 
 ```sql
 -- "Who submitted application 5, and who reviewed it?"
