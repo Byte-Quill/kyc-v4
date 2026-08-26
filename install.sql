@@ -152,3 +152,76 @@ INSERT INTO
 VALUES (1, 'CEO'),
     (2, 'SUPER_ADMIN'),
     (3, 'ADMIN');
+
+-- ---------------------------------------------------------------------------
+-- Default profile data for the seeded staff accounts (user ids 1, 2, 3), so
+-- every related table has at least one record out of the box:
+-- addresses, education, additional_documents and one draft application each.
+-- Document columns are NULL until real files are uploaded through the app.
+-- ---------------------------------------------------------------------------
+INSERT INTO
+    addresses (user_id, permanent_address, temporary_address)
+VALUES (1, 'Kathmandu-1, Durbar Marg, Nepal', 'Lalitpur-3, Jhamsikhel, Nepal'),
+    (2, 'Pokhara-4, Lakeside, Nepal', 'Kathmandu-5, New Baneshwor, Nepal'),
+    (3, 'Bhaktapur-2, Taumadhi, Nepal', 'Kathmandu-9, Gongabu, Nepal');
+
+INSERT INTO
+    education (user_id, see_document, slc_document, graduate_document)
+VALUES (1, NULL, NULL, NULL),
+    (2, NULL, NULL, NULL),
+    (3, NULL, NULL, NULL);
+
+INSERT INTO
+    additional_documents (user_id, citizenship_document, passport_document, license_document)
+VALUES (1, NULL, NULL, NULL),
+    (2, NULL, NULL, NULL),
+    (3, NULL, NULL, NULL);
+
+INSERT INTO
+    applications (
+        applicant_id,
+        status,
+        full_name,
+        date_of_birth,
+        nationality,
+        id_type,
+        id_number,
+        issuing_country
+    )
+VALUES (
+        1,
+        'DRAFT',
+        'CEO User',
+        '1985-04-12',
+        'Nepali',
+        'Citizenship',
+        'CIT-001-2020',
+        'Nepal'
+    ),
+    (
+        2,
+        'DRAFT',
+        'Super Admin User',
+        '1990-08-25',
+        'Nepali',
+        'Passport',
+        'PP-002-2021',
+        'Nepal'
+    ),
+    (
+        3,
+        'DRAFT',
+        'Admin User',
+        '1992-11-30',
+        'Nepali',
+        'National ID',
+        'NID-003-2022',
+        'Nepal'
+    );
+
+-- Audit trail entries for the seeded draft applications.
+INSERT INTO
+    audit_logs (application_id, actor_id, action, detail)
+VALUES (1, 1, 'CREATED', 'Application draft created.'),
+    (2, 2, 'CREATED', 'Application draft created.'),
+    (3, 3, 'CREATED', 'Application draft created.');
