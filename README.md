@@ -21,6 +21,7 @@ New to the codebase? Start here:
 
 | Document                                     | What it explains                                                                                                |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [docs/RUN-GUIDE.md](docs/RUN-GUIDE.md)       | Step-by-step setup for Windows, Linux (Debian / Linux Mint), and macOS                                          |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Request lifecycle, file map, roles & permissions, workflow states, security model, contributor conventions      |
 | [docs/DATABASE.md](docs/DATABASE.md)         | Full schema reference, design rules (why `user_id` is the PK in one-to-one tables), seeded data, common queries |
 
