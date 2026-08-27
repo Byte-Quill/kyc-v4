@@ -326,7 +326,8 @@ mailer.php         Email sending via PHPMailer + email_logs
 actions.php        All POST handlers (auth, applications, review, users)
 layout.php         Shared header / footer / navigation
 pages/             One file per page (login, dashboard, review, users, ...)
-docs/              Developer guides (ARCHITECTURE.md, DATABASE.md)
+docs/              Developer guides (ARCHITECTURE.md, DATABASE.md, RUN-GUIDE.md)
+scripts/           Operational tools (deploy, MySQL repair, OPcache) — not deployed
 assets/style.css   Design system and responsive layout
 install.sql        Schema + seeded staff accounts
 api.php            JSON read API (optional, kept for integrations)
@@ -361,14 +362,17 @@ small XAMPP box up to a production server — **without removing any features**:
 | Technique                           | What it does                                                                                                                                                                   |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Single-query stats**              | Dashboard / CEO / API counters use one `GROUP BY` query (`application_status_counts()`, `email_status_counts()`) instead of 6–11 separate `COUNT(*)` round-trips per page load |
+| **Role-aware queries**              | Pages only run the queries their role actually displays (e.g. user totals are fetched on the CEO dashboard alone)                                                              |
+| **PHP OPcache**                     | `scripts/deploy-xampp.sh` enables OPcache automatically — compiled bytecode stays in shared memory, so pages render fast even on very low-power hardware                       |
 | **Database indexes**                | `applications` (status, applicant, created/updated), `audit_logs` (application), `email_logs` (status, recipient) keep every list and filter fast as data grows                |
 | **Gzip compression**                | `.htaccess` compresses HTML/CSS/JS/JSON responses, cutting transfer size                                                                                                       |
 | **Browser caching**                 | Static assets are cached for 7–30 days; the stylesheet is cache-busted with its file mtime so updates still apply instantly                                                    |
 | **No build step / no JS framework** | Pure server-rendered PHP means no bundler, no Node, and minimal client-side work — ideal for low-power devices                                                                 |
 | **Lazy DB connection**              | `db()` opens one PDO connection per request (static singleton)                                                                                                                 |
 
-> 💡 Re-running `sudo bash deploy-xampp.sh` automatically adds any missing
-> performance indexes to an existing database (safe to run repeatedly).
+> 💡 Re-running `sudo bash scripts/deploy-xampp.sh` automatically enables
+> OPcache and adds any missing performance indexes to an existing database
+> (safe to run repeatedly).
 
 ## 📜 License
 

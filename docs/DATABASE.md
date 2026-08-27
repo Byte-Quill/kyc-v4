@@ -96,7 +96,8 @@ changes roles with `INSERT ... ON DUPLICATE KEY UPDATE`.
 | `review_notes`, `reviewed_at`                               |                   | filled by the reviewer                                                                 |
 | `created_at`, `updated_at`                                  | TIMESTAMP         |                                                                                        |
 
-Indexed on `status` (the review queue filters by it).
+Indexed on `status` (the review queue filters by it), `applicant_id`,
+`created_at`, and `updated_at` (list pages sort and filter by them).
 
 ### `audit_logs` — complete event history
 

@@ -85,12 +85,13 @@ Follow the installer wizard (defaults are fine). XAMPP installs to `/opt/lampp`.
 
 ```bash
 cd /path/to/kyc-v4
-sudo bash deploy-xampp.sh
+sudo bash scripts/deploy-xampp.sh
 ```
 
 This single script copies the code into `/opt/lampp/htdocs/kyc-v4`, makes the
-`uploads/` folder writable, starts Apache + MySQL, imports the database (first
-time only), and prints a health check.
+`uploads/` folder writable, enables PHP OPcache (for smooth performance on
+low-power devices), starts Apache + MySQL, imports the database (first time
+only), and prints a health check.
 
 **Option B — manual:**
 
@@ -113,8 +114,9 @@ sudo /opt/lampp/bin/mysql -uroot < /opt/lampp/htdocs/kyc-v4/install.sql
 http://localhost/kyc-v4/
 ```
 
-> 💡 Any time you change the code, just re-run `sudo bash deploy-xampp.sh` to
-> sync it into XAMPP (it also adds any missing database indexes).
+> 💡 Any time you change the code, just re-run `sudo bash scripts/deploy-xampp.sh`
+> to sync it into XAMPP (it also enables OPcache and adds any missing database
+> indexes).
 
 ---
 
@@ -182,6 +184,7 @@ You can also click **Create an account** on the login page to register a new
 | Problem                                                | Fix                                                                                                                                                                                      |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **"Unable to connect to the database"**                | Make sure MySQL is started in the XAMPP Control Panel / Manage Servers                                                                                                                   |
+| **MySQL starts but crashes immediately (Linux)**       | Run `sudo bash scripts/fix-xampp-mysql.sh` — it backs up the corrupted data directory, re-initializes MariaDB, and re-imports `install.sql`                                              |
 | **Page is blank or 404**                               | Check the folder is named `kyc-v4` inside `htdocs`, and that `index.php` is inside it                                                                                                    |
 | **Port 80 already in use** (Windows)                   | Stop Skype/IIS or change Apache's port in XAMPP Config                                                                                                                                   |
 | **Upload fails with "Unable to create upload folder"** | Make the `uploads/` folder writable (Linux: `sudo chmod -R 777 uploads`)                                                                                                                 |

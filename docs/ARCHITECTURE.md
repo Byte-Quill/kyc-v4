@@ -102,14 +102,15 @@ re-submits a form.
 
 ### Assets & data
 
-| Path                    | Role                                                                             |
-| ----------------------- | -------------------------------------------------------------------------------- |
-| `assets/style.css`      | The entire design system (no CSS framework).                                     |
-| `uploads/users/<id>/`   | Uploaded documents (random filenames, JPG/PNG/PDF ≤ 5 MB).                       |
-| `install.sql`           | Full schema + seeded staff accounts + default profile data.                      |
-| `.env` / `.env.example` | Local configuration (DB credentials, SMTP). Never committed.                     |
-| `vendor/`               | Composer dependencies (PHPMailer). Install with `composer install`.              |
-| `frontend/`             | **Reference only** — an older React/Vite version of the UI. Not used at runtime. |
+| Path                    | Role                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `assets/style.css`      | The entire design system (no CSS framework).                                                                          |
+| `uploads/users/<id>/`   | Uploaded documents (random filenames, JPG/PNG/PDF ≤ 5 MB).                                                            |
+| `install.sql`           | Full schema + seeded staff accounts + default profile data.                                                           |
+| `scripts/`              | Operational tools: `deploy-xampp.sh`, `fix-xampp-mysql.sh`, `enable-opcache.sh`. Excluded from the deployed web root. |
+| `.env` / `.env.example` | Local configuration (DB credentials, SMTP). Never committed.                                                          |
+| `vendor/`               | Composer dependencies (PHPMailer). Install with `composer install`.                                                   |
+| `frontend/`             | **Reference only** — an older React/Vite version of the UI. Not used at runtime.                                      |
 
 ## 4. Roles & permissions
 

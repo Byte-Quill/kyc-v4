@@ -1,21 +1,26 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
 # KYC Verify — one-shot XAMPP deployment (run with sudo)
-#   sudo bash deploy-xampp.sh
+#   sudo bash scripts/deploy-xampp.sh
 #
 # 1. Copies the project into the XAMPP web root (htdocs/kyc-v4)
+#    — dev-only folders (.git, frontend, dist, scripts) are excluded
 # 2. Makes uploads/ writable by Apache (XAMPP runs Apache as 'daemon')
-# 3. Starts Apache + MySQL
-# 4. Imports install.sql (creates kyc_system DB + seeded staff accounts)
-# 5. Verifies the app responds
+# 3. Enables PHP OPcache (idempotent) for smooth performance on any device
+# 4. Starts Apache + MySQL (restarts Apache when OPcache was just enabled)
+# 5. Imports install.sql (creates kyc_system DB + seeded staff accounts)
+#    or migrates an existing database (missing indexes / new columns)
+# 6. Verifies the app responds
 #
-# Re-run any time to sync code changes into htdocs.
+# Re-run any time to sync code changes into htdocs. Every step is safe to
+# repeat — nothing is applied twice.
 # ---------------------------------------------------------------------------
 set -e
 
 SRC="/home/thunderstrom/Documents/kyc/kyc-v4"
 DEST="/opt/lampp/htdocs/kyc-v4"
 MYSQL="/opt/lampp/bin/mysql"
+PHP_INI="/opt/lampp/etc/php.ini"
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "Please run this script with sudo:  sudo bash $0"
@@ -29,12 +34,12 @@ if command -v rsync >/dev/null 2>&1; then
     --exclude '.git' \
     --exclude 'frontend' \
     --exclude 'dist' \
+    --exclude 'scripts' \
     --exclude 'composer.phar' \
-    --exclude 'deploy-xampp.sh' \
     "$SRC/" "$DEST/"
 else
   cp -a "$SRC/." "$DEST/"
-  rm -rf "$DEST/.git" "$DEST/frontend" "$DEST/dist" "$DEST/composer.phar" "$DEST/deploy-xampp.sh"
+  rm -rf "$DEST/.git" "$DEST/frontend" "$DEST/dist" "$DEST/scripts" "$DEST/composer.phar"
 fi
 echo "Copied project to $DEST"
 
@@ -43,12 +48,42 @@ mkdir -p "$DEST/uploads"
 chmod -R 0777 "$DEST/uploads"
 echo "uploads/ is writable"
 
-# --- 3. Start Apache & MySQL ---------------------------------------------------
+# --- 3. Enable PHP OPcache (safe to re-run) ----------------------------------
+# OPcache keeps compiled PHP in shared memory so pages render fast even on
+# very low-power hardware. The block is appended once and skipped when present.
+OPCACHE_CHANGED=0
+if ! grep -q "^zend_extension=opcache.so" "$PHP_INI"; then
+  cp "$PHP_INI" "${PHP_INI}.bak-kyc-$(date +%Y%m%d-%H%M%S)"
+  cat >> "$PHP_INI" <<'EOF'
+
+; --- KYC Verify performance: OPcache (added by scripts/deploy-xampp.sh) -----
+; Keeps compiled PHP in shared memory — big speedup on low-power devices.
+; validate_timestamps stays ON with a 2s revalidate so code edits apply fast.
+zend_extension=opcache.so
+opcache.enable=1
+opcache.enable_cli=0
+opcache.memory_consumption=64
+opcache.interned_strings_buffer=8
+opcache.max_accelerated_files=4000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=2
+EOF
+  OPCACHE_CHANGED=1
+  echo "OPcache enabled in $PHP_INI (backup saved alongside)."
+else
+  echo "OPcache already enabled — skipped."
+fi
+
+# --- 4. Start Apache & MySQL ---------------------------------------------------
+# Restart Apache when the PHP config just changed so OPcache loads.
+if [ "$OPCACHE_CHANGED" = "1" ] && pgrep -x httpd >/dev/null 2>&1; then
+  /opt/lampp/lampp stopapache
+fi
 /opt/lampp/lampp startapache
 /opt/lampp/lampp startmysql
 sleep 2
 
-# --- 4. Import database schema (only if not already present) -------------------
+# --- 5. Import database schema (only if not already present) -------------------
 if [ -z "$("$MYSQL" -uroot -N -e "SHOW DATABASES LIKE 'kyc_system'" 2>/dev/null)" ]; then
   "$MYSQL" -uroot < "$DEST/install.sql"
   echo "Database kyc_system imported (tables + seeded staff accounts)."
@@ -100,7 +135,7 @@ else
   drop_column applications issuing_country
 fi
 
-# --- 5. Verify ------------------------------------------------------------------
+# --- 6. Verify ------------------------------------------------------------------
 CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/kyc-v4/index.php)
 echo
 echo "App health check: HTTP $CODE"

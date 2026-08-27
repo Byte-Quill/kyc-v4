@@ -1,6 +1,10 @@
-http://localhost/phpmyadmin#!/usr/bin/env bash
+#!/usr/bin/env bash
 # ============================================================================
 # fix-xampp-mysql.sh — Repair XAMPP's broken MariaDB (InnoDB corruption).
+#
+# Use this when `sudo /opt/lampp/lampp startmysql` starts MySQL but it
+# crashes immediately (stale socket, errors about InnoDB or permissions in
+# /opt/lampp/var/mysql/LX.err).
 #
 # What it does:
 #   1. Stops XAMPP MySQL (if running)
@@ -10,7 +14,7 @@ http://localhost/phpmyadmin#!/usr/bin/env bash
 #      (matches DB_PASS="" in .env)
 #   5. Imports install.sql (kyc_system database + seeded staff accounts)
 #
-# Usage:  sudo bash fix-xampp-mysql.sh
+# Usage:  sudo bash scripts/fix-xampp-mysql.sh
 # ============================================================================
 set -e
 
@@ -52,7 +56,7 @@ sleep 3
 
 echo "[6/6] Importing kyc_system schema from install.sql..."
 if [ ! -f "$INSTALL_SQL" ]; then
-    echo "WARNING: $INSTALL_SQL not found — deploy the app first (sudo bash deploy-xampp.sh)."
+    echo "WARNING: $INSTALL_SQL not found — deploy the app first (sudo bash scripts/deploy-xampp.sh)."
 else
     "$MYSQL" -uroot < "$INSTALL_SQL"
     echo

@@ -61,8 +61,14 @@ $pendingApps   = $byStatus['SUBMITTED'] + $byStatus['UNDER_REVIEW'];
 $approvedApps  = $byStatus['APPROVED'];
 $rejectedApps  = $byStatus['REJECTED'];
 $resubmits     = $byStatus['RESUBMISSION_REQUESTED'];
-$userCount     = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
-$applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
+// Only the CEO dashboard displays user/applicant totals — skip those two
+// COUNT queries for ADMIN and SUPER_ADMIN to keep their page lighter.
+$userCount      = 0;
+$applicantCount = 0;
+if ($u['role'] === 'CEO') {
+    $userCount      = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
+    $applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
+}
 $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
 ?>
 <div class="hero">

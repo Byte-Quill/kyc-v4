@@ -1,7 +1,7 @@
 Options -Indexes
 DirectoryIndex index.php
 
-<FilesMatch "\.(sql|md|env)$">
+<FilesMatch "\.(sql|md|env|sh|bak|lock|json|phar)$">
 Require all denied
 </FilesMatch>
 
