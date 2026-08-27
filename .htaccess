@@ -10,3 +10,34 @@ Require all denied
 <Files ".env">
 Require all denied
 </Files>
+
+# ---------------------------------------------------------------------------
+# Performance: gzip compression + browser caching.
+# Keeps pages small and avoids re-downloading unchanged assets, which helps
+# low-power devices and slow connections. Everything is guarded so the app
+# still runs on Apache builds without these modules.
+# ---------------------------------------------------------------------------
+
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml
+    AddOutputFilterByType DEFLATE application/javascript application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    # HTML/PHP pages are dynamic — never cache them.
+    ExpiresByType text/html "access plus 0 seconds"
+    # Static assets can be cached; layout.php cache-busts the stylesheet.
+    ExpiresByType text/css "access plus 7 days"
+    ExpiresByType application/javascript "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 30 days"
+    ExpiresByType image/png "access plus 30 days"
+    ExpiresByType image/svg+xml "access plus 30 days"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|jpg|jpeg|png|svg|webp)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

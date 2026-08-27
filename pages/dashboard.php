@@ -53,11 +53,14 @@ require_role(STAFF_ROLES);
 
 header_html(role_label($u['role']) . ' Dashboard');
 
-$totalApps     = (int) db()->query('SELECT COUNT(*) FROM applications')->fetchColumn();
-$pendingApps   = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status IN ('SUBMITTED','UNDER_REVIEW')")->fetchColumn();
-$approvedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'APPROVED'")->fetchColumn();
-$rejectedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
-$resubmits     = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
+// One GROUP BY query replaces six separate COUNT(*) round-trips.
+$counts        = application_status_counts();
+$totalApps     = $counts['total'];
+$byStatus      = $counts['by_status'];
+$pendingApps   = $byStatus['SUBMITTED'] + $byStatus['UNDER_REVIEW'];
+$approvedApps  = $byStatus['APPROVED'];
+$rejectedApps  = $byStatus['REJECTED'];
+$resubmits     = $byStatus['RESUBMISSION_REQUESTED'];
 $userCount     = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
 $applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
 $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;

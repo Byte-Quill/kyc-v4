@@ -54,6 +54,23 @@ if [ -z "$("$MYSQL" -uroot -N -e "SHOW DATABASES LIKE 'kyc_system'" 2>/dev/null)
   echo "Database kyc_system imported (tables + seeded staff accounts)."
 else
   echo "Database kyc_system already exists — import skipped (drop it first to re-import)."
+
+  # Performance indexes for databases created before install.sql had them.
+  # Each index is only created when missing, so this is safe to re-run.
+  ensure_index() {
+    local table="$1" index="$2" cols="$3"
+    local exists
+    exists=$("$MYSQL" -uroot -N -e "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema='kyc_system' AND table_name='$table' AND index_name='$index'" 2>/dev/null)
+    if [ "$exists" = "0" ]; then
+      "$MYSQL" -uroot kyc_system -e "CREATE INDEX $index ON $table ($cols)"
+      echo "Added index $index on $table($cols)"
+    fi
+  }
+  ensure_index applications idx_applicant applicant_id
+  ensure_index applications idx_updated updated_at
+  ensure_index applications idx_created created_at
+  ensure_index audit_logs idx_application application_id
+  ensure_index email_logs idx_status status
 fi
 
 # --- 5. Verify ------------------------------------------------------------------

@@ -37,11 +37,14 @@ switch ($action) {
     case 'dashboard':
         $u = api_require_login();
         if (in_array($u['role'], STAFF_ROLES, true)) {
-            $totalApps     = (int) db()->query('SELECT COUNT(*) FROM applications')->fetchColumn();
-            $pendingApps   = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status IN ('SUBMITTED','UNDER_REVIEW')")->fetchColumn();
-            $approvedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'APPROVED'")->fetchColumn();
-            $rejectedApps  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
-            $resubmits     = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
+            // One GROUP BY query replaces six separate COUNT(*) round-trips.
+            $counts        = application_status_counts();
+            $totalApps     = $counts['total'];
+            $byStatus      = $counts['by_status'];
+            $pendingApps   = $byStatus['SUBMITTED'] + $byStatus['UNDER_REVIEW'];
+            $approvedApps  = $byStatus['APPROVED'];
+            $rejectedApps  = $byStatus['REJECTED'];
+            $resubmits     = $byStatus['RESUBMISSION_REQUESTED'];
             $userCount     = (int) db()->query('SELECT COUNT(*) FROM users')->fetchColumn();
             $applicantCount = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
             $approvalRate  = $totalApps > 0 ? round($approvedApps / $totalApps * 100) : 0;
@@ -158,19 +161,30 @@ switch ($action) {
 
     case 'ceo':
         api_require_role(['CEO']);
-        $total       = (int) db()->query('SELECT COUNT(*) FROM applications')->fetchColumn();
-        $submitted   = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'SUBMITTED'")->fetchColumn();
-        $underReview = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'UNDER_REVIEW'")->fetchColumn();
-        $approved    = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'APPROVED'")->fetchColumn();
-        $rejected    = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
-        $resubmits   = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
+        // One GROUP BY query replaces six separate COUNT(*) round-trips.
+        $counts      = application_status_counts();
+        $total       = $counts['total'];
+        $byStatus    = $counts['by_status'];
+        $submitted   = $byStatus['SUBMITTED'];
+        $underReview = $byStatus['UNDER_REVIEW'];
+        $approved    = $byStatus['APPROVED'];
+        $rejected    = $byStatus['REJECTED'];
+        $resubmits   = $byStatus['RESUBMISSION_REQUESTED'];
         $pending     = $submitted + $underReview;
         $approvalRate = $total > 0 ? round($approved / $total * 100) : 0;
         $applicants  = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
-        $emailsSent  = (int) db()->query('SELECT COUNT(*) FROM email_logs')->fetchColumn();
-        $emailsFailed = (int) db()->query("SELECT COUNT(*) FROM email_logs WHERE status = 'FAILED'")->fetchColumn();
+        $emails      = email_status_counts();
+        $emailsSent  = $emails['sent'];
+        $emailsFailed = $emails['failed'];
 
-        $pipeline = db()->query('SELECT status, COUNT(*) c FROM applications GROUP BY status ORDER BY c DESC')->fetchAll();
+        // Reuse the counts already fetched above — no extra query for the pipeline.
+        $pipeline = [];
+        foreach ($byStatus as $status => $c) {
+            if ($c > 0) {
+                $pipeline[] = ['status' => $status, 'c' => $c];
+            }
+        }
+        usort($pipeline, fn ($a, $b) => $b['c'] <=> $a['c']);
         $recent   = db()->query('SELECT a.id, a.status, u.username applicant_name, a.created_at
                                  FROM applications a JOIN users u ON u.id = a.applicant_id
                                  ORDER BY a.created_at DESC LIMIT 8')->fetchAll();

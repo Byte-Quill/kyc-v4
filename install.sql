@@ -91,7 +91,10 @@ CREATE TABLE applications (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_applicant FOREIGN KEY (applicant_id) REFERENCES users (id) ON DELETE CASCADE,
     CONSTRAINT fk_reviewer FOREIGN KEY (reviewer_id) REFERENCES users (id) ON DELETE SET NULL,
-    INDEX idx_status (status)
+    INDEX idx_status (status),
+    INDEX idx_applicant (applicant_id),
+    INDEX idx_updated (updated_at),
+    INDEX idx_created (created_at)
 ) ENGINE = InnoDB;
 
 CREATE TABLE audit_logs (
@@ -102,7 +105,8 @@ CREATE TABLE audit_logs (
     detail TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_audit_application FOREIGN KEY (application_id) REFERENCES applications (id) ON DELETE CASCADE,
-    CONSTRAINT fk_audit_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE SET NULL
+    CONSTRAINT fk_audit_actor FOREIGN KEY (actor_id) REFERENCES users (id) ON DELETE SET NULL,
+    INDEX idx_application (application_id)
 ) ENGINE = InnoDB;
 
 -- Outbox for every email the system sends (works even when SMTP is disabled).
@@ -114,7 +118,8 @@ CREATE TABLE email_logs (
     status ENUM('SENT', 'FAILED') NOT NULL DEFAULT 'SENT',
     error TEXT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_recipient (recipient)
+    INDEX idx_recipient (recipient),
+    INDEX idx_status (status)
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------------------

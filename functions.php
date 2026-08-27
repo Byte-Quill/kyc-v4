@@ -150,6 +150,55 @@ function can_access(array $app, array $u): bool
     return $app['applicant_id'] == $u['id'] || in_array($u['role'], STAFF_ROLES, true);
 }
 
+/**
+ * Count every application status in ONE query instead of issuing a separate
+ * `SELECT COUNT(*) ... WHERE status = ?` per status. This cuts ~6 database
+ * round-trips down to 1, which matters most on low-power devices and slow
+ * disks. Returns ['total' => int, 'by_status' => [STATUS => int]] with every
+ * known status present (defaulting to 0).
+ */
+function application_status_counts(): array
+{
+    $byStatus = [
+        'DRAFT'                    => 0,
+        'SUBMITTED'                => 0,
+        'UNDER_REVIEW'             => 0,
+        'APPROVED'                 => 0,
+        'REJECTED'                 => 0,
+        'RESUBMISSION_REQUESTED'   => 0,
+    ];
+
+    $rows  = db()->query('SELECT status, COUNT(*) c FROM applications GROUP BY status')->fetchAll();
+    $total = 0;
+    foreach ($rows as $row) {
+        $count = (int) $row['c'];
+        $byStatus[$row['status']] = $count;
+        $total += $count;
+    }
+
+    return ['total' => $total, 'by_status' => $byStatus];
+}
+
+/**
+ * Count sent/failed emails in ONE query (email_logs). Same rationale as
+ * application_status_counts(): a single round-trip instead of two/three.
+ * Returns ['sent' => int, 'failed' => int, 'total' => int].
+ */
+function email_status_counts(): array
+{
+    $sent = 0;
+    $failed = 0;
+    $rows = db()->query('SELECT status, COUNT(*) c FROM email_logs GROUP BY status')->fetchAll();
+    foreach ($rows as $row) {
+        if ($row['status'] === 'SENT') {
+            $sent = (int) $row['c'];
+        } elseif ($row['status'] === 'FAILED') {
+            $failed = (int) $row['c'];
+        }
+    }
+    return ['sent' => $sent, 'failed' => $failed, 'total' => $sent + $failed];
+}
+
 // ---------------------------------------------------------------------------
 // Status display
 // ---------------------------------------------------------------------------

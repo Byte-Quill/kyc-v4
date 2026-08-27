@@ -32,7 +32,13 @@ function header_html(string $title): void
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title) ?> · <?= APP_NAME ?></title>
-    <link rel="stylesheet" href="assets/style.css">
+    <?php
+    // Cache-bust the stylesheet with its modification time so browsers can
+    // cache it aggressively (see .htaccess) yet always pick up new styles.
+    $cssFile = __DIR__ . '/assets/style.css';
+    $cssVersion = is_file($cssFile) ? (string) filemtime($cssFile) : '1';
+    ?>
+    <link rel="stylesheet" href="assets/style.css?v=<?= e($cssVersion) ?>">
 </head>
 <body>
 <header>

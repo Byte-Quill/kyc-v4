@@ -14,17 +14,21 @@ header_html('Analytics');
 // ---------------------------------------------------------------------------
 // KPIs
 // ---------------------------------------------------------------------------
-$total     = (int) db()->query('SELECT COUNT(*) FROM applications')->fetchColumn();
-$submitted = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'SUBMITTED'")->fetchColumn();
-$underReview = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'UNDER_REVIEW'")->fetchColumn();
-$approved  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'APPROVED'")->fetchColumn();
-$rejected  = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'REJECTED'")->fetchColumn();
-$resubmits = (int) db()->query("SELECT COUNT(*) FROM applications WHERE status = 'RESUBMISSION_REQUESTED'")->fetchColumn();
+// One GROUP BY query replaces six separate COUNT(*) round-trips.
+$counts    = application_status_counts();
+$total     = $counts['total'];
+$byStatus  = $counts['by_status'];
+$submitted = $byStatus['SUBMITTED'];
+$underReview = $byStatus['UNDER_REVIEW'];
+$approved  = $byStatus['APPROVED'];
+$rejected  = $byStatus['REJECTED'];
+$resubmits = $byStatus['RESUBMISSION_REQUESTED'];
 $pending   = $submitted + $underReview;
 $approvalRate = $total > 0 ? round($approved / $total * 100) : 0;
 $applicants   = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'APPLICANT'")->fetchColumn();
-$emailsSent   = (int) db()->query('SELECT COUNT(*) FROM email_logs')->fetchColumn();
-$emailsFailed = (int) db()->query("SELECT COUNT(*) FROM email_logs WHERE status = 'FAILED'")->fetchColumn();
+$emails       = email_status_counts();
+$emailsSent   = $emails['sent'];
+$emailsFailed = $emails['failed'];
 ?>
 <div class="hero compact">
     <div>
@@ -55,7 +59,14 @@ $emailsFailed = (int) db()->query("SELECT COUNT(*) FROM email_logs WHERE status 
     <div class="card">
         <h2>Pipeline by status</h2>
         <?php
-        $rows = db()->query('SELECT status, COUNT(*) c FROM applications GROUP BY status ORDER BY c DESC')->fetchAll();
+        // Reuse the counts already fetched above — no extra query for the chart.
+        $rows = [];
+        foreach ($byStatus as $status => $c) {
+            if ($c > 0) {
+                $rows[] = ['status' => $status, 'c' => $c];
+            }
+        }
+        usort($rows, fn ($a, $b) => $b['c'] <=> $a['c']);
         $max  = max(array_column($rows, 'c') ?: [1]);
         if (!$rows): ?>
             <p class="empty">No applications yet.</p>
