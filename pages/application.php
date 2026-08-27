@@ -94,11 +94,11 @@ header_html('Application #' . $id);
         <label>ID number *
             <input name="id_number" value="<?= e($app['id_number']) ?>" required>
         </label>
-        <label>ID expiry
-            <input type="date" name="id_expiry" value="<?= e($app['id_expiry']) ?>">
+        <label>ID issue date
+            <input type="date" name="id_issue_date" value="<?= e($app['id_issue_date']) ?>">
         </label>
-        <label>Issuing country
-            <input name="issuing_country" value="<?= e($app['issuing_country']) ?>">
+        <label>Issuing district
+            <input name="issuing_district" value="<?= e($app['issuing_district']) ?>">
         </label>
 
         <h2 class="grid-span">Addresses</h2>
@@ -129,8 +129,8 @@ header_html('Application #' . $id);
             <div><dt>Nationality</dt><dd><?= e($app['nationality'] ?: '—') ?></dd></div>
             <div><dt>ID type</dt><dd><?= e($app['id_type'] ?: '—') ?></dd></div>
             <div><dt>ID number</dt><dd><?= e($app['id_number'] ?: '—') ?></dd></div>
-            <div><dt>ID expiry</dt><dd><?= e($app['id_expiry'] ?: '—') ?></dd></div>
-            <div><dt>Issuing country</dt><dd><?= e($app['issuing_country'] ?: '—') ?></dd></div>
+            <div><dt>ID issue date</dt><dd><?= e($app['id_issue_date'] ?: '—') ?></dd></div>
+            <div><dt>Issuing district</dt><dd><?= e($app['issuing_district'] ?: '—') ?></dd></div>
             <div><dt>Permanent address</dt><dd><?= nl2br(e($app['permanent_address'] ?: '—')) ?></dd></div>
             <div><dt>Temporary address</dt><dd><?= nl2br(e($app['temporary_address'] ?: '—')) ?></dd></div>
         </dl>

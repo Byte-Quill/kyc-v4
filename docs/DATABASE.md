@@ -85,16 +85,16 @@ changes roles with `INSERT ... ON DUPLICATE KEY UPDATE`.
 
 ### `applications` — the KYC workflow
 
-| Column                                                 | Type              | Notes                                                                                  |
-| ------------------------------------------------------ | ----------------- | -------------------------------------------------------------------------------------- |
-| `id`                                                   | INT UNSIGNED PK   | application number                                                                     |
-| `applicant_id`                                         | INT UNSIGNED      | FK → `users.id`, CASCADE — who submitted                                               |
-| `reviewer_id`                                          | INT UNSIGNED NULL | FK → `users.id`, SET NULL — who reviewed                                               |
-| `status`                                               | ENUM              | `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `RESUBMISSION_REQUESTED` |
-| `full_name`, `date_of_birth`, `nationality`            |                   | personal details                                                                       |
-| `id_type`, `id_number`, `id_expiry`, `issuing_country` |                   | identity document details                                                              |
-| `review_notes`, `reviewed_at`                          |                   | filled by the reviewer                                                                 |
-| `created_at`, `updated_at`                             | TIMESTAMP         |                                                                                        |
+| Column                                                      | Type              | Notes                                                                                  |
+| ----------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------- |
+| `id`                                                        | INT UNSIGNED PK   | application number                                                                     |
+| `applicant_id`                                              | INT UNSIGNED      | FK → `users.id`, CASCADE — who submitted                                               |
+| `reviewer_id`                                               | INT UNSIGNED NULL | FK → `users.id`, SET NULL — who reviewed                                               |
+| `status`                                                    | ENUM              | `DRAFT`, `SUBMITTED`, `UNDER_REVIEW`, `APPROVED`, `REJECTED`, `RESUBMISSION_REQUESTED` |
+| `full_name`, `date_of_birth`, `nationality`                 |                   | personal details                                                                       |
+| `id_type`, `id_number`, `id_issue_date`, `issuing_district` |                   | identity document details                                                              |
+| `review_notes`, `reviewed_at`                               |                   | filled by the reviewer                                                                 |
+| `created_at`, `updated_at`                                  | TIMESTAMP         |                                                                                        |
 
 Indexed on `status` (the review queue filters by it).
 

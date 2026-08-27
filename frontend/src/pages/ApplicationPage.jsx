@@ -56,8 +56,8 @@ export default function ApplicationPage() {
           nationality: app.nationality || '',
           id_type: app.id_type || '',
           id_number: app.id_number || '',
-          id_expiry: app.id_expiry || '',
-          issuing_country: app.issuing_country || '',
+          id_issue_date: app.id_issue_date || '',
+          issuing_district: app.issuing_district || '',
           permanent_address: app.permanent_address || '',
           temporary_address: app.temporary_address || '',
         })
@@ -173,12 +173,12 @@ export default function ApplicationPage() {
                 <input value={form.id_number} onChange={set('id_number')} required />
               </div>
               <div>
-                <label>ID expiry</label>
-                <input type="date" value={form.id_expiry} onChange={set('id_expiry')} />
+                <label>ID issue date</label>
+                <input type="date" value={form.id_issue_date} onChange={set('id_issue_date')} />
               </div>
               <div>
-                <label>Issuing country</label>
-                <input value={form.issuing_country} onChange={set('issuing_country')} />
+                <label>Issuing district</label>
+                <input value={form.issuing_district} onChange={set('issuing_district')} />
               </div>
               <div className="grid-span">
                 <label>Permanent address *</label>
@@ -216,8 +216,8 @@ export default function ApplicationPage() {
               <div><dt>Nationality</dt><dd>{app.nationality || '—'}</dd></div>
               <div><dt>ID type</dt><dd>{app.id_type || '—'}</dd></div>
               <div><dt>ID number</dt><dd>{app.id_number || '—'}</dd></div>
-              <div><dt>ID expiry</dt><dd>{app.id_expiry || '—'}</dd></div>
-              <div><dt>Issuing country</dt><dd>{app.issuing_country || '—'}</dd></div>
+              <div><dt>ID issue date</dt><dd>{app.id_issue_date || '—'}</dd></div>
+              <div><dt>Issuing district</dt><dd>{app.issuing_district || '—'}</dd></div>
               <div><dt>Permanent address</dt><dd className="wide">{app.permanent_address || '—'}</dd></div>
               <div><dt>Temporary address</dt><dd className="wide">{app.temporary_address || '—'}</dd></div>
             </dl>

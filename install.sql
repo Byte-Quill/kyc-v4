@@ -83,8 +83,8 @@ CREATE TABLE applications (
     nationality VARCHAR(100) NULL,
     id_type VARCHAR(60) NULL,
     id_number VARCHAR(100) NULL,
-    id_expiry DATE NULL,
-    issuing_country VARCHAR(100) NULL,
+    id_issue_date DATE NULL,
+    issuing_district VARCHAR(100) NULL,
     review_notes TEXT NULL,
     reviewed_at DATETIME NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -188,7 +188,8 @@ INSERT INTO
         nationality,
         id_type,
         id_number,
-        issuing_country
+        id_issue_date,
+        issuing_district
     )
 VALUES (
         1,
@@ -198,7 +199,8 @@ VALUES (
         'Nepali',
         'Citizenship',
         'CIT-001-2020',
-        'Nepal'
+        '2020-01-15',
+        'Kathmandu'
     ),
     (
         2,
@@ -208,7 +210,8 @@ VALUES (
         'Nepali',
         'Passport',
         'PP-002-2021',
-        'Nepal'
+        '2021-03-10',
+        'Kaski'
     ),
     (
         3,
@@ -218,7 +221,8 @@ VALUES (
         'Nepali',
         'National ID',
         'NID-003-2022',
-        'Nepal'
+        '2022-06-20',
+        'Bhaktapur'
     );
 
 -- Audit trail entries for the seeded draft applications.

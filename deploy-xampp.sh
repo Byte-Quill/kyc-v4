@@ -71,6 +71,33 @@ else
   ensure_index applications idx_created created_at
   ensure_index audit_logs idx_application application_id
   ensure_index email_logs idx_status status
+
+  # New identity-document columns added after the first release.
+  # Each column is only added when missing, so this is safe to re-run.
+  ensure_column() {
+    local table="$1" column="$2" definition="$3"
+    local exists
+    exists=$("$MYSQL" -uroot -N -e "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='kyc_system' AND table_name='$table' AND column_name='$column'" 2>/dev/null)
+    if [ "$exists" = "0" ]; then
+      "$MYSQL" -uroot kyc_system -e "ALTER TABLE $table ADD COLUMN $column $definition"
+      echo "Added column $table.$column"
+    fi
+  }
+  ensure_column applications id_issue_date "DATE NULL AFTER id_number"
+  ensure_column applications issuing_district "VARCHAR(100) NULL AFTER id_issue_date"
+
+  # Drop legacy identity-document columns removed after the first release.
+  drop_column() {
+    local table="$1" column="$2"
+    local exists
+    exists=$("$MYSQL" -uroot -N -e "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='kyc_system' AND table_name='$table' AND column_name='$column'" 2>/dev/null)
+    if [ "$exists" = "1" ]; then
+      "$MYSQL" -uroot kyc_system -e "ALTER TABLE $table DROP COLUMN $column"
+      echo "Dropped legacy column $table.$column"
+    fi
+  }
+  drop_column applications id_expiry
+  drop_column applications issuing_country
 fi
 
 # --- 5. Verify ------------------------------------------------------------------

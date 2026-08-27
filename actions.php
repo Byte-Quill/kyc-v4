@@ -104,7 +104,7 @@ function save_application(array $u): void
     $app = editable_application($u);
     $id  = (int) $app['id'];
 
-    $fields = ['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'id_expiry', 'issuing_country'];
+    $fields = ['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'id_issue_date', 'issuing_district'];
     $values = [];
     foreach ($fields as $f) {
         $values[] = trim($_POST[$f] ?? '') ?: null;

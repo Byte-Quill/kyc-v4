@@ -113,7 +113,7 @@ function api_editable_application(array $u, array $in): array
 /** Persist the personal and address fields from an input array. */
 function api_save_application_fields(array $u, int $id, array $in): void
 {
-    $fields = ['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'id_expiry', 'issuing_country'];
+    $fields = ['full_name', 'date_of_birth', 'nationality', 'id_type', 'id_number', 'id_issue_date', 'issuing_district'];
     $values = [];
     foreach ($fields as $f) {
         $values[] = trim($in[$f] ?? '') ?: null;
