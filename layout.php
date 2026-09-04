@@ -35,10 +35,17 @@ function header_html(string $title): void
     <?php
     // Cache-bust the stylesheet with its modification time so browsers can
     // cache it aggressively (see .htaccess) yet always pick up new styles.
+    // When a minified sidecar exists and is current, serve that instead —
+    // same design, smaller download. Regenerate with scripts/minify-css.php.
     $cssFile = __DIR__ . '/assets/style.css';
+    $minFile = __DIR__ . '/assets/style.min.css';
+    $cssHref = 'assets/style.css';
+    if (is_file($minFile) && (!$cssFile || filemtime($minFile) >= filemtime($cssFile))) {
+        $cssHref = 'assets/style.min.css';
+    }
     $cssVersion = is_file($cssFile) ? (string) filemtime($cssFile) : '1';
     ?>
-    <link rel="stylesheet" href="assets/style.css?v=<?= e($cssVersion) ?>">
+    <link rel="stylesheet" href="<?= e($cssHref) ?>?v=<?= e($cssVersion) ?>">
 </head>
 <body>
 <header>
