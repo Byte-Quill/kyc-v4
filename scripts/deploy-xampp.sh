@@ -136,14 +136,6 @@ else
 fi
 
 # --- 6. Verify ------------------------------------------------------------------
-# Regenerate the minified stylesheet so the deployed copy always matches
-# the current source CSS (layout.php serves the .min.css when it is fresh).
-if command -v php >/dev/null 2>&1; then
-  php "$SRC/scripts/minify-css.php" >/dev/null 2>&1 \
-    && cp "$SRC/assets/style.min.css" "$DEST/assets/style.min.css" \
-    && echo "Minified stylesheet refreshed."
-fi
-
 CODE=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/kyc-v4/index.php)
 echo
 echo "App health check: HTTP $CODE"
