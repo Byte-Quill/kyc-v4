@@ -1,7 +1,7 @@
 Options -Indexes
 DirectoryIndex index.php
 
-<FilesMatch "\.(sql|md|env|sh|bak|lock|json|phar)$|^minify-css\.php$">
+<FilesMatch "\.(sql|md|env|sh|bak|lock|json|phar)$">
 Require all denied
 </FilesMatch>
 
@@ -39,8 +39,5 @@ Require all denied
 <IfModule mod_headers.c>
     <FilesMatch "\.(css|js|jpg|jpeg|png|svg|webp)$">
         Header set Cache-Control "public, max-age=604800"
-    </FilesMatch>
-    <FilesMatch "\.(css|js|svg)$">
-        Header set Vary "Accept-Encoding"
     </FilesMatch>
 </IfModule>

@@ -20,44 +20,16 @@ require_once __DIR__ . '/layout.php';
 
 // The PHP built-in server runs in router mode (php -S ... index.php), so every
 // request arrives here — including real files like assets/style.css, api.php
-// and uploads/... Under Apache the web server serves real files directly and
-// applies .htaccess rules, so this branch is a no-op there.
+// and uploads/... Let the built-in server serve those as-is. Under Apache the
+// web server serves real files directly, so this branch is a no-op there.
+// index.php itself is excluded: returning false for it would make the server
+// re-run this script as a plain file and produce an empty response.
 if (PHP_SAPI === 'cli-server') {
     $assetPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
     if ($assetPath !== '/index.php' && $assetPath !== '/') {
         $real = realpath(__DIR__ . $assetPath);
         if ($real !== false && is_file($real) && str_starts_with($real, realpath(__DIR__))) {
-            // Mirror the .htaccess deny rules: never serve config, docs,
-            // scripts, VCS data or lock files from the dev server either.
-            $banned = '/\.(sql|md|env|sh|bak|lock|json|phar)$|(^|\/)\.(git|env)/i';
-            if (preg_match($banned, $assetPath)) {
-                http_response_code(404);
-                exit;
-            }
-            // Compress text assets and let browsers cache them for a week
-            // (layout.php cache-busts the stylesheet via its mtime).
-            $ext = strtolower(pathinfo($real, PATHINFO_EXTENSION));
-            if (in_array($ext, ['css', 'js', 'svg', 'json'], true)) {
-                $content = (string) file_get_contents($real);
-                $etag = '"' . md5($content . filesize($real)) . '"';
-                header('ETag: ' . $etag);
-                header('Cache-Control: public, max-age=604800');
-                if (trim($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
-                    http_response_code(304);
-                    exit;
-                }
-                header('Content-Type: ' . ($ext === 'css' ? 'text/css' : ($ext === 'js' ? 'application/javascript' : ($ext === 'svg' ? 'image/svg+xml' : 'application/json'))));
-                if (str_contains($_SERVER['HTTP_ACCEPT_ENCODING'] ?? '', 'gzip')
-                    && function_exists('gzencode')) {
-                    header('Content-Encoding: gzip');
-                    header('Vary: Accept-Encoding');
-                    echo gzencode($content, 6);
-                } else {
-                    echo $content;
-                }
-                exit;
-            }
-            return false; // let the built-in server stream it (uploads etc.)
+            return false;
         }
     }
 }

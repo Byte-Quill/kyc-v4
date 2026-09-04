@@ -11,42 +11,8 @@
  *   - Status display .......... status_class(), format_status(), badge()
  *   - Document links .......... document_link(), document_url()
  *   - File uploads ............ store_upload(), save_user_document(), DOCUMENT_FIELDS
- *   - Response compression .... gzip + HTML minification output buffers
  */
 declare(strict_types=1);
-
-// ---------------------------------------------------------------------------
-// Response compression (gzip + HTML minification)
-// ---------------------------------------------------------------------------
-// Two stacked output buffers shrink every response without changing a single
-// feature. The inner buffer strips template indentation from HTML output; the
-// outer buffer (ob_gzhandler) gzip-compresses the result when the client sends
-// Accept-Encoding: gzip. Under Apache, mod_deflate skips responses that
-// already carry a Content-Encoding header, so this is safe next to the
-// .htaccess rules — it mainly powers the PHP built-in dev server.
-if (PHP_SAPI !== 'cli'
-    && !filter_var(ini_get('zlib.output_compression'), FILTER_VALIDATE_BOOL)
-    && function_exists('ob_gzhandler')
-) {
-    ob_start('ob_gzhandler');
-    ob_start('minify_html');
-}
-
-/**
- * Collapse template indentation between tags. Only whitespace that contains
- * a newline is removed, so meaningful single spaces between inline elements
- * — and text inside <textarea>/<pre> — are always preserved. JSON responses
- * set an explicit Content-Type header and pass through untouched.
- */
-function minify_html(string $html): string
-{
-    foreach (headers_list() as $h) {
-        if (stripos($h, 'Content-Type:') === 0 && stripos($h, 'json') !== false) {
-            return $html; // JSON API output — minify nothing
-        }
-    }
-    return preg_replace('~>(?:[ \t]*\n)+[ \t]*<~', '><', trim($html)) ?? $html;
-}
 
 require_once __DIR__ . '/database.php';
 
