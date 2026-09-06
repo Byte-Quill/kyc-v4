@@ -1,9 +1,10 @@
 -- KYC Verify v5 — fresh install for XAMPP / phpMyAdmin.
 -- Roles: APPLICANT (default), ADMIN, SUPER_ADMIN, CEO.
--- Seeded staff accounts (password for all: Password123):
+-- Seeded staff accounts (password for all: Password123!):
 --   ceo@kyc.local        (CEO)
 --   superadmin@kyc.local (SUPER_ADMIN)
 --   admin@kyc.local      (ADMIN)
+-- IMPORTANT: Change these passwords immediately after first login.
 
 CREATE DATABASE IF NOT EXISTS kyc_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -14,9 +15,10 @@ USE kyc_system;
 -- ---------------------------------------------------------------------------
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(120) NOT NULL,
+    username VARCHAR(120) NOT NULL UNIQUE,
     email VARCHAR(190) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 
@@ -124,28 +126,33 @@ CREATE TABLE email_logs (
 
 -- ---------------------------------------------------------------------------
 -- Seed staff accounts so every dashboard is testable immediately.
--- Password for all three accounts: Password123
+-- Password for all three accounts: Password123!
+-- IMPORTANT: Change these passwords immediately after first login.
 -- ---------------------------------------------------------------------------
 INSERT INTO
     users (
         username,
         email,
-        password_hash
+        password_hash,
+        is_active
     )
 VALUES (
         'CEO',
         'ceo@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        1
     ),
     (
         'Super Admin',
         'superadmin@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        1
     ),
     (
         'Admin',
         'admin@kyc.local',
-        '$2y$10$TlLLQ566SpkzTuHBPt8R.OUKamkt8o0EQth1A/czV1Sc90xHY.Ru6'
+        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        1
     );
 
 -- Roles for the seeded staff accounts live in user_roles (one row per user).

@@ -114,6 +114,80 @@ function json_input(): array
 }
 
 // ---------------------------------------------------------------------------
+// Rate limiting
+// ---------------------------------------------------------------------------
+
+/**
+ * Lightweight rate limiter using a file-based counter.
+ * Allows $maxAttempts per $windowSeconds per unique key (IP + optional account).
+ * Returns true when the request is allowed, false when throttled.
+ */
+function rate_limit(string $key, int $maxAttempts = 5, int $windowSeconds = 300): bool
+{
+    $dir = sys_get_temp_dir() . '/kyc_rate_limit';
+    if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) {
+        // If we can't create the directory, fail open (allow) to avoid lockouts.
+        return true;
+    }
+
+    $file = $dir . '/' . hash('sha256', $key) . '.json';
+    $now  = time();
+
+    $data = ['count' => 0, 'window_start' => $now];
+    if (is_file($file)) {
+        $raw = @file_get_contents($file);
+        if ($raw !== false) {
+            $decoded = json_decode($raw, true);
+            if (is_array($decoded)) {
+                $data = $decoded;
+            }
+        }
+    }
+
+    // Reset the window if it has expired.
+    if ($now - (int) ($data['window_start'] ?? $now) >= $windowSeconds) {
+        $data = ['count' => 0, 'window_start' => $now];
+    }
+
+    $data['count'] = (int) ($data['count'] ?? 0) + 1;
+
+    // Write back (best-effort; ignore failures).
+    @file_put_contents($file, json_encode($data), LOCK_EX);
+
+    return $data['count'] <= $maxAttempts;
+}
+
+/** Get the client IP address (respecting common proxy headers). */
+function client_ip(): string
+{
+    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+}
+
+/**
+ * Validate password strength: at least 8 chars, with at least one uppercase,
+ * one lowercase, one digit, and one special character.
+ */
+function validate_password(string $password): bool
+{
+    if (strlen($password) < 8) {
+        return false;
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        return false;
+    }
+    if (!preg_match('/[a-z]/', $password)) {
+        return false;
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        return false;
+    }
+    if (!preg_match('/[^A-Za-z0-9]/', $password)) {
+        return false;
+    }
+    return true;
+}
+
+// ---------------------------------------------------------------------------
 // Audit logging
 // ---------------------------------------------------------------------------
 
@@ -121,6 +195,13 @@ function log_action(int $applicationId, ?int $actorId, string $action, string $d
 {
     db()->prepare('INSERT INTO audit_logs (application_id, actor_id, action, detail) VALUES (?, ?, ?, ?)')
         ->execute([$applicationId, $actorId, $action, $detail]);
+}
+
+/** Log an admin action (user management) to audit_logs with application_id = 0. */
+function log_admin_action(?int $actorId, string $action, string $detail = ''): void
+{
+    db()->prepare('INSERT INTO audit_logs (application_id, actor_id, action, detail) VALUES (0, ?, ?, ?)')
+        ->execute([$actorId, $action, $detail]);
 }
 
 // ---------------------------------------------------------------------------
@@ -223,7 +304,7 @@ function document_link(?string $file, int $userId): string
     if (!$file) {
         return '<span class="muted">Not uploaded</span>';
     }
-    return '<a href="uploads/users/' . $userId . '/' . rawurlencode($file) . '" target="_blank" rel="noopener">View uploaded document</a>';
+    return '<a href="document.php?user=' . $userId . '&file=' . rawurlencode($file) . '" target="_blank" rel="noopener">View uploaded document</a>';
 }
 
 /** Absolute URL for a stored document — used by the JSON API. */
@@ -232,7 +313,7 @@ function document_url(?string $file, int $userId): ?string
     if (!$file) {
         return null;
     }
-    return 'uploads/users/' . $userId . '/' . rawurlencode($file);
+    return 'document.php?user=' . $userId . '&file=' . rawurlencode($file);
 }
 
 // ---------------------------------------------------------------------------

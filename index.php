@@ -1,8 +1,24 @@
 <?php
 declare(strict_types=1);
 
-session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+// Session hardening: httponly, SameSite=Lax, secure when HTTPS, 30-min idle timeout.
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure'   => $isHttps,
+]);
 session_start();
+
+// Idle session timeout: 30 minutes of inactivity.
+$idleTimeout = 1800;
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $idleTimeout) {
+    session_unset();
+    session_destroy();
+    session_start();
+}
+$_SESSION['last_activity'] = time();
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/auth.php';

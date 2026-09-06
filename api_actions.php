@@ -10,8 +10,24 @@ declare(strict_types=1);
 // CSRF must be verified via the X-CSRF-Token header (or the `csrf` field).
 // ---------------------------------------------------------------------------
 
-session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+// Session hardening: httponly, SameSite=Lax, secure when HTTPS, 30-min idle timeout.
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+session_set_cookie_params([
+    'httponly' => true,
+    'samesite' => 'Lax',
+    'secure'   => $isHttps,
+]);
 session_start();
+
+// Idle session timeout: 30 minutes of inactivity.
+$idleTimeout = 1800;
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $idleTimeout) {
+    session_unset();
+    session_destroy();
+    session_start();
+}
+$_SESSION['last_activity'] = time();
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/auth.php';
@@ -50,11 +66,15 @@ function handle_api_action(string $action, array $in): array
 {
     switch ($action) {
         case 'register':
+            // Rate limit: 5 registrations per IP per 15 minutes.
+            if (!rate_limit('register:' . client_ip(), 5, 900)) {
+                throw new RuntimeException('Too many registration attempts. Please try again later.');
+            }
             $username = trim($in['username'] ?? '');
             $email    = strtolower(trim($in['email'] ?? ''));
             $password = $in['password'] ?? '';
-            if (strlen($username) < 2 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
-                throw new RuntimeException('Enter a username, valid email, and password of at least 8 characters.');
+            if (strlen($username) < 2 || strlen($username) > 120 || !filter_var($email, FILTER_VALIDATE_EMAIL) || !validate_password($password)) {
+                throw new RuntimeException('Enter a username (2-120 chars), valid email, and a strong password (8+ chars with upper, lower, digit, and special character).');
             }
             db()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)')
                 ->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
@@ -63,15 +83,24 @@ function handle_api_action(string $action, array $in): array
             return ['redirect' => '/login', 'flash' => 'Account created. Please sign in.'];
 
         case 'login':
+            // Rate limit: 5 attempts per IP per 15 minutes.
+            if (!rate_limit('login:' . client_ip(), 5, 900)) {
+                throw new RuntimeException('Too many login attempts. Please try again later.');
+            }
             $s = db()->prepare('SELECT u.*, ur.role FROM users u JOIN user_roles ur ON ur.user_id = u.id WHERE u.email = ?');
             $s->execute([strtolower(trim($in['email'] ?? ''))]);
             $account = $s->fetch();
             if (!$account || !password_verify($in['password'] ?? '', $account['password_hash'])) {
                 throw new RuntimeException('Incorrect email or password.');
             }
+            if (isset($account['is_active']) && (int) $account['is_active'] !== 1) {
+                throw new RuntimeException('This account has been disabled. Contact an administrator.');
+            }
             session_regenerate_id(true);
             unset($account['password_hash']);
             $_SESSION['user'] = $account;
+            // Rotate the CSRF token after login.
+            $_SESSION['csrf'] = bin2hex(random_bytes(32));
             return ['data' => $account, 'redirect' => '/dashboard', 'flash' => 'Welcome back, ' . $account['username'] . '.'];
 
         case 'logout':
@@ -241,16 +270,18 @@ function api_create_user(array $u, array $in): array
     $role     = $in['role'] ?? '';
     $roles    = ['APPLICANT', 'ADMIN', 'SUPER_ADMIN', 'CEO'];
 
-    if (strlen($username) < 2 || !filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($password) < 8) {
-        throw new RuntimeException('Enter a username, valid email, and password of at least 8 characters.');
+    if (strlen($username) < 2 || strlen($username) > 120 || !filter_var($email, FILTER_VALIDATE_EMAIL) || !validate_password($password)) {
+        throw new RuntimeException('Enter a username (2-120 chars), valid email, and a strong password (8+ chars with upper, lower, digit, and special character).');
     }
     if (!in_array($role, $roles, true)) {
         throw new RuntimeException('Choose a valid role.');
     }
     db()->prepare('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)')
         ->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT)]);
+    $newId = (int) db()->lastInsertId();
     db()->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)')
-        ->execute([(int) db()->lastInsertId(), $role]);
+        ->execute([$newId, $role]);
+    log_admin_action((int) $u['id'], 'USER_CREATED', 'Created user "' . $username . '" (' . $email . ') as ' . $role . '.');
     return ['redirect' => '/users', 'flash' => 'User "' . $username . '" created as ' . role_label($role) . '.'];
 }
 
@@ -260,7 +291,7 @@ function api_update_user(array $u, array $in): array
     $id      = (int) ($in['id'] ?? 0);
     $role    = $in['role'] ?? '';
     $roles   = ['APPLICANT', 'ADMIN', 'SUPER_ADMIN', 'CEO'];
-    $target  = db()->prepare('SELECT * FROM users WHERE id = ?');
+    $target  = db()->prepare('SELECT u.*, ur.role FROM users u JOIN user_roles ur ON ur.user_id = u.id WHERE u.id = ?');
     $target->execute([$id]);
     $targetUser = $target->fetch();
 
@@ -273,10 +304,22 @@ function api_update_user(array $u, array $in): array
     if ($targetUser['id'] == $u['id']) {
         throw new RuntimeException('You cannot change your own role.');
     }
+    // Prevent a SUPER_ADMIN from modifying another SUPER_ADMIN's role.
+    if ($targetUser['role'] === 'SUPER_ADMIN' && $role !== 'SUPER_ADMIN') {
+        throw new RuntimeException('You cannot demote another Super Admin.');
+    }
+    // Prevent the last SUPER_ADMIN from being demoted.
+    if ($targetUser['role'] === 'SUPER_ADMIN' && $role !== 'SUPER_ADMIN') {
+        $superAdmins = (int) db()->query("SELECT COUNT(*) FROM user_roles WHERE role = 'SUPER_ADMIN'")->fetchColumn();
+        if ($superAdmins <= 1) {
+            throw new RuntimeException('You cannot demote the last Super Admin.');
+        }
+    }
 
     db()->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?)
                    ON DUPLICATE KEY UPDATE role = VALUES(role)')
         ->execute([$id, $role]);
+    log_admin_action((int) $u['id'], 'USER_ROLE_CHANGED', 'Changed role of "' . $targetUser['username'] . '" from ' . $targetUser['role'] . ' to ' . $role . '.');
     return ['redirect' => '/users', 'flash' => 'Role updated for "' . $targetUser['username'] . '".'];
 }
 
@@ -285,8 +328,8 @@ function api_reset_password(array $u, array $in): array
     api_require_role(['SUPER_ADMIN']);
     $id       = (int) ($in['id'] ?? 0);
     $password = $in['password'] ?? '';
-    if (strlen($password) < 8) {
-        throw new RuntimeException('The new password must be at least 8 characters.');
+    if (!validate_password($password)) {
+        throw new RuntimeException('The new password must be at least 8 characters with upper, lower, digit, and special character.');
     }
     $target = db()->prepare('SELECT * FROM users WHERE id = ?');
     $target->execute([$id]);
@@ -297,6 +340,7 @@ function api_reset_password(array $u, array $in): array
 
     db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')
         ->execute([password_hash($password, PASSWORD_DEFAULT), $id]);
+    log_admin_action((int) $u['id'], 'PASSWORD_RESET', 'Reset password for user "' . $targetUser['username'] . '".');
     return ['redirect' => '/users', 'flash' => 'Password reset for "' . $targetUser['username'] . '".'];
 }
 
