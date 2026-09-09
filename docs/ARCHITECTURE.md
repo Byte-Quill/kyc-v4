@@ -110,7 +110,6 @@ re-submits a form.
 | `scripts/`              | Operational tools: `deploy-xampp.sh`, `fix-xampp-mysql.sh`, `enable-opcache.sh`. Excluded from the deployed web root. |
 | `.env` / `.env.example` | Local configuration (DB credentials, SMTP). Never committed.                                                          |
 | `vendor/`               | Composer dependencies (PHPMailer). Install with `composer install`.                                                   |
-| `frontend/`             | **Reference only** — an older React/Vite version of the UI. Not used at runtime.                                      |
 
 ## 4. Roles & permissions
 

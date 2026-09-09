@@ -4,7 +4,7 @@
 #   sudo bash scripts/deploy-xampp.sh
 #
 # 1. Copies the project into the XAMPP web root (htdocs/kyc-v4)
-#    — dev-only folders (.git, frontend, dist, scripts) are excluded
+#    — dev-only folders (.git, scripts) are excluded
 # 2. Makes uploads/ writable by Apache (XAMPP runs Apache as 'daemon')
 # 3. Enables PHP OPcache (idempotent) for smooth performance on any device
 # 4. Starts Apache + MySQL (restarts Apache when OPcache was just enabled)
@@ -32,14 +32,11 @@ mkdir -p "$DEST"
 if command -v rsync >/dev/null 2>&1; then
   rsync -a --delete \
     --exclude '.git' \
-    --exclude 'frontend' \
-    --exclude 'dist' \
     --exclude 'scripts' \
-    --exclude 'composer.phar' \
     "$SRC/" "$DEST/"
 else
   cp -a "$SRC/." "$DEST/"
-  rm -rf "$DEST/.git" "$DEST/frontend" "$DEST/dist" "$DEST/scripts" "$DEST/composer.phar"
+  rm -rf "$DEST/.git" "$DEST/scripts"
 fi
 echo "Copied project to $DEST"
 

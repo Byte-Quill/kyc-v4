@@ -31,7 +31,7 @@ require_once __DIR__ . '/layout.php';
 //   POST action=<name>  is dispatched through actions.php, then redirected
 //
 // The JSON API endpoints (api.php / api_actions.php) remain available as
-// separate entry points. The React app in frontend/ is kept for reference.
+// separate entry points.
 // ---------------------------------------------------------------------------
 
 // The PHP built-in server runs in router mode (php -S ... index.php), so every
