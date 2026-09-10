@@ -39,6 +39,7 @@ function header_html(string $title): void
     $cssVersion = is_file($cssFile) ? (string) filemtime($cssFile) : '1';
     ?>
     <link rel="stylesheet" href="assets/style.css?v=<?= e($cssVersion) ?>">
+    <script src="assets/auth.js" defer></script>
 </head>
 <body>
 <header>

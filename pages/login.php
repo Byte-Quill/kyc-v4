@@ -11,15 +11,17 @@ declare(strict_types=1);
 header_html('Sign in');
 ?>
 <section class="auth auth-center">
-    <form method="post" class="card auth-card">
+    <form method="post" class="card auth-card" data-validate>
         <h2>Welcome back</h2>
         <input type="hidden" name="csrf" value="<?= csrf() ?>">
         <input type="hidden" name="action" value="login">
         <label>Email
-            <input type="email" name="email" required autofocus autocomplete="email">
+            <input type="email" name="email" data-rule="email" required autofocus autocomplete="email">
+            <small class="hint feedback"></small>
         </label>
         <label>Password
-            <input type="password" name="password" required autocomplete="current-password">
+            <input type="password" name="password" data-rule="password" required autocomplete="current-password">
+            <small class="hint feedback"></small>
         </label>
         <button class="button button-block">Sign in</button>
         <p class="muted">New here? <a href="?page=register">Create an account</a></p>

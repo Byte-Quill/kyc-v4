@@ -252,6 +252,30 @@ textarea { resize: vertical; }
 
 .hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
 
+/* Field validation states (auth.js) */
+input.valid {
+    border-color: var(--success);
+    background: var(--success-bg);
+}
+
+input.invalid {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+}
+
+input.invalid:focus {
+    outline: 2px solid var(--danger);
+    border-color: var(--danger);
+}
+
+input.valid:focus {
+    outline: 2px solid var(--success);
+    border-color: var(--success);
+}
+
+.hint-ok { color: var(--success); }
+.hint-err { color: var(--danger); }
+
 .stack { display: flex; flex-direction: column; gap: 14px; }
 
 .inline-stack { flex-direction: row; align-items: end; flex-wrap: wrap; gap: 10px; }
