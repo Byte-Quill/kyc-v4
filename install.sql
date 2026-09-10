@@ -5,6 +5,7 @@
 --   superadmin@kyc.local (SUPER_ADMIN)
 --   admin@kyc.local      (ADMIN)
 -- IMPORTANT: Change these passwords immediately after first login.
+-- NOTE: The hash below is bcrypt('Password123!') — regenerate if you change it.
 
 CREATE DATABASE IF NOT EXISTS kyc_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -139,19 +140,19 @@ INSERT INTO
 VALUES (
         'CEO',
         'ceo@kyc.local',
-        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        '$2y$10$YC8vFgBG8Kp58GTW91g99uIdStbw8QxbB0KAYMwJfoGtxtSDeIwpO',
         1
     ),
     (
         'Super Admin',
         'superadmin@kyc.local',
-        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        '$2y$10$YC8vFgBG8Kp58GTW91g99uIdStbw8QxbB0KAYMwJfoGtxtSDeIwpO',
         1
     ),
     (
         'Admin',
         'admin@kyc.local',
-        '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',
+        '$2y$10$YC8vFgBG8Kp58GTW91g99uIdStbw8QxbB0KAYMwJfoGtxtSDeIwpO',
         1
     );
 

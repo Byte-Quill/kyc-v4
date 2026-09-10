@@ -64,11 +64,11 @@ Sign in → ?page=login → role-based dashboard
 
 The database comes with three staff accounts pre-seeded by `install.sql`. Use these to explore each dashboard immediately:
 
-| Role            | Email                  | Password      |
-| --------------- | ---------------------- | ------------- |
-| **CEO**         | `ceo@kyc.local`        | `Password123` |
-| **SUPER_ADMIN** | `superadmin@kyc.local` | `Password123` |
-| **ADMIN**       | `admin@kyc.local`      | `Password123` |
+| Role            | Email                  | Password       |
+| --------------- | ---------------------- | -------------- |
+| **CEO**         | `ceo@kyc.local`        | `Password123!` |
+| **SUPER_ADMIN** | `superadmin@kyc.local` | `Password123!` |
+| **ADMIN**       | `admin@kyc.local`      | `Password123!` |
 
 > ⚠️ These are **development-only demo credentials** — change them before any real deployment.
 
